@@ -3,167 +3,181 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PINE Advisors — Agreement Dashboard</title>
+<title>PINE Advisors — Agreement Management Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: Inter, system-ui, sans-serif;
-    background: #f0f4f8;
-    color: #1a202c;
-    min-height: 100vh;
-}
+body { font-family: Inter, system-ui, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #718096; border-radius: 4px; }
 ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 4px; }
+a { color: #2b6b3e; text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-/* Login Overlay */
-#login-overlay {
-    position: fixed; inset: 0; background: #f0f4f8;
-    display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-.login-card {
-    background: #fff; border-radius: 12px; padding: 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    text-align: center; max-width: 420px; width: 90%;
-}
-.login-card h1 { font-size: 24px; font-weight: 700; color: #1a202c; margin-bottom: 8px; }
+/* Login */
+#login-overlay { position: fixed; inset: 0; background: #f0f4f8; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.login-card { background: #fff; border-radius: 12px; padding: 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; max-width: 420px; width: 90%; }
+.login-card h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
 .login-card p { color: #718096; margin-bottom: 24px; font-size: 14px; }
-.login-card input {
-    width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px;
-    font-size: 14px; font-family: Inter, system-ui, sans-serif; margin-bottom: 16px;
-}
+.login-card input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: Inter, system-ui, sans-serif; margin-bottom: 16px; }
 .login-card input:focus { outline: none; border-color: #2b6b3e; box-shadow: 0 0 0 3px rgba(43,107,62,0.1); }
-.login-card button {
-    width: 100%; padding: 12px; background: #2b6b3e; color: #fff; border: none;
-    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-    font-family: Inter, system-ui, sans-serif; transition: background 0.2s;
-}
+.login-card button { width: 100%; padding: 12px; background: #2b6b3e; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: Inter, system-ui, sans-serif; }
 .login-card button:hover { background: #224f2f; }
 .login-error { color: #c53030; font-size: 13px; margin-top: 8px; display: none; }
 
-/* Layout */
+/* Shell */
 .app { display: none; }
-.header {
-    background: #fff; border-bottom: 1px solid #e2e8f0; padding: 16px 32px;
-    display: flex; align-items: center; justify-content: space-between;
-}
-.header-left { display: flex; align-items: center; gap: 12px; }
-.header-left .logo {
-    width: 36px; height: 36px; background: #2b6b3e; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 700; font-size: 16px;
-}
-.header h1 { font-size: 18px; font-weight: 700; }
-.header-right { display: flex; align-items: center; gap: 16px; }
-.header-right .refresh-time { font-size: 12px; color: #718096; }
-.header-right button {
-    padding: 8px 16px; background: #2b6b3e; color: #fff; border: none;
-    border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
-    font-family: Inter, system-ui, sans-serif;
-}
-.header-right button:hover { background: #224f2f; }
+.sidebar { position: fixed; left: 0; top: 0; width: 240px; height: 100vh; background: #1a202c; color: #e2e8f0; display: flex; flex-direction: column; z-index: 100; }
+.sidebar-brand { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2d3748; }
+.sidebar-brand .logo { width: 32px; height: 32px; background: #2b6b3e; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.sidebar-brand span { font-size: 14px; font-weight: 700; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+.nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #718096; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #a0aec0; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-item:hover { background: #2d3748; color: #fff; }
+.nav-item.active { background: #2d3748; color: #fff; border-left-color: #2b6b3e; }
+.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-item .nav-badge { margin-left: auto; background: #c53030; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid #2d3748; font-size: 12px; color: #718096; }
+.sidebar-footer .user-name { color: #e2e8f0; font-weight: 500; }
 
-.content { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+.main { margin-left: 240px; min-height: 100vh; }
+.topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; }
+.topbar h2 { font-size: 16px; font-weight: 700; }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.topbar-actions .refresh-time { font-size: 11px; color: #718096; }
+.btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: Inter, system-ui, sans-serif; transition: all 0.15s; }
+.btn-primary { background: #2b6b3e; color: #fff; }
+.btn-primary:hover { background: #224f2f; }
+.btn-secondary { background: #edf2f7; color: #4a5568; }
+.btn-secondary:hover { background: #e2e8f0; }
+.btn-danger { background: #fed7d7; color: #c53030; }
 
-/* Tab Nav */
-.tab-nav {
-    display: flex; gap: 4px; background: #fff; border-radius: 10px;
-    padding: 4px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.tab-btn {
-    padding: 10px 20px; border: none; background: none; border-radius: 8px;
-    font-size: 13px; font-weight: 500; color: #718096; cursor: pointer;
-    font-family: Inter, system-ui, sans-serif; transition: all 0.2s;
-}
-.tab-btn.active { background: #2b6b3e; color: #fff; }
-.tab-btn:hover:not(.active) { background: #f0f4f8; color: #1a202c; }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.content { padding: 24px 28px; }
 
-/* KPI Cards */
-.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-.kpi-card {
-    background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.kpi-card .kpi-label { font-size: 12px; font-weight: 500; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
-.kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: #1a202c; margin: 4px 0; }
-.kpi-card .kpi-sub { font-size: 12px; color: #718096; }
-.kpi-card.green .kpi-value { color: #2b6b3e; }
-.kpi-card.amber .kpi-value { color: #d97706; }
-.kpi-card.red .kpi-value { color: #c53030; }
+/* Grids */
+.g1 { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.g5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 20px; }
+.g6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 20px; }
 
-/* Chart Row */
-.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-.card {
-    background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #1a202c; }
-.card-full { grid-column: 1 / -1; }
+/* Cards */
+.card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.card h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.3px; }
+.kpi { text-align: center; }
+.kpi .kpi-val { font-size: 26px; font-weight: 800; margin: 2px 0; }
+.kpi .kpi-label { font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi .kpi-sub { font-size: 11px; color: #a0aec0; margin-top: 2px; }
+.kpi.green .kpi-val { color: #2b6b3e; }
+.kpi.red .kpi-val { color: #c53030; }
+.kpi.amber .kpi-val { color: #d97706; }
+.kpi.blue .kpi-val { color: #2b6cb0; }
 
 /* Tables */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead th {
-    text-align: left; padding: 10px 12px; background: #f7fafc; border-bottom: 2px solid #e2e8f0;
-    font-weight: 600; color: #4a5568; font-size: 12px; text-transform: uppercase;
-    letter-spacing: 0.3px; white-space: nowrap; cursor: pointer; user-select: none;
-}
+.tbl-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th { position: sticky; top: 0; text-align: left; padding: 8px 10px; background: #f7fafc; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #4a5568; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; cursor: pointer; user-select: none; z-index: 1; }
 thead th:hover { background: #edf2f7; }
-tbody td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; white-space: nowrap; }
+tbody td { padding: 8px 10px; border-bottom: 1px solid #f0f4f8; white-space: nowrap; }
 tbody tr:hover { background: #f7fafc; }
+tbody tr.row-danger { background: #fff5f5; }
+tbody tr.row-warn { background: #fffff0; }
 
 /* Badges */
-.badge {
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-}
-.badge-green { background: #e6f4ea; color: #1b7a3d; }
-.badge-amber { background: #fef3c7; color: #92400e; }
-.badge-red { background: #fee2e2; color: #991b1b; }
-.badge-gray { background: #edf2f7; color: #4a5568; }
-.badge-blue { background: #e0effe; color: #1e40af; }
+.b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.b-green { background: #e6f4ea; color: #1b7a3d; }
+.b-amber { background: #fef3c7; color: #92400e; }
+.b-red { background: #fee2e2; color: #991b1b; }
+.b-gray { background: #edf2f7; color: #4a5568; }
+.b-blue { background: #e0effe; color: #1e40af; }
+.b-purple { background: #f3e8ff; color: #6b21a8; }
 
-/* Search & Filter */
-.toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.toolbar input, .toolbar select {
-    padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;
-    font-size: 13px; font-family: Inter, system-ui, sans-serif; background: #fff;
-}
+/* Search */
+.toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.toolbar input, .toolbar select { padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-family: Inter, system-ui, sans-serif; background: #fff; }
 .toolbar input:focus, .toolbar select:focus { outline: none; border-color: #2b6b3e; }
-.toolbar input { flex: 1; min-width: 200px; }
+.toolbar input { flex: 1; min-width: 180px; }
 
-/* Alert Summary */
-.alert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-.alert-stat {
-    padding: 16px; border-radius: 8px; background: #f7fafc; text-align: center;
-}
-.alert-stat .count { font-size: 24px; font-weight: 700; }
-.alert-stat .label { font-size: 11px; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+/* Tree */
+.tree { font-size: 13px; }
+.tree-parent { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; background: #fff; overflow: hidden; }
+.tree-parent-header { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; gap: 10px; font-weight: 600; transition: background 0.15s; }
+.tree-parent-header:hover { background: #f7fafc; }
+.tree-parent-header .arrow { transition: transform 0.2s; font-size: 12px; color: #718096; }
+.tree-parent-header .arrow.open { transform: rotate(90deg); }
+.tree-parent-header .stats { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 400; color: #718096; }
+.tree-children { display: none; border-top: 1px solid #f0f4f8; }
+.tree-children.open { display: block; }
+.tree-client { border-bottom: 1px solid #f0f4f8; }
+.tree-client-header { display: flex; align-items: center; padding: 10px 16px 10px 36px; cursor: pointer; gap: 8px; font-weight: 500; font-size: 12px; }
+.tree-client-header:hover { background: #f7fafc; }
+.tree-client-header .arrow { font-size: 10px; color: #a0aec0; transition: transform 0.2s; }
+.tree-client-header .arrow.open { transform: rotate(90deg); }
+.tree-client-header .stats { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 400; color: #a0aec0; }
+.tree-agreements { display: none; background: #fafcfe; }
+.tree-agreements.open { display: block; }
+.tree-agreement { padding: 8px 16px 8px 56px; border-bottom: 1px solid #f0f4f8; font-size: 12px; display: flex; align-items: center; gap: 10px; }
+.tree-agreement:hover { background: #f0f4f8; }
+.tree-agreement .agr-name { font-weight: 500; flex: 1; }
+.tree-agreement .agr-meta { display: flex; gap: 14px; color: #718096; font-size: 11px; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+.tl-item { position: relative; margin-bottom: 16px; padding-left: 16px; }
+.tl-item::before { content: ''; position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #2b6b3e; background: #fff; }
+.tl-item.urgent::before { border-color: #c53030; background: #fee2e2; }
+.tl-item.soon::before { border-color: #d97706; background: #fef3c7; }
+.tl-date { font-size: 11px; font-weight: 600; color: #718096; margin-bottom: 2px; }
+.tl-title { font-size: 13px; font-weight: 500; }
+.tl-sub { font-size: 11px; color: #a0aec0; }
+
+/* Escalator cards */
+.esc-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff; }
+.esc-card.active { border-color: #2b6b3e; border-left: 4px solid #2b6b3e; }
+.esc-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+.esc-client { font-weight: 600; font-size: 13px; }
+.esc-type { font-size: 11px; color: #718096; }
+.esc-detail { font-size: 12px; color: #4a5568; line-height: 1.5; }
+.esc-detail strong { color: #1a202c; }
+
+/* Recommendation cards */
+.rec-card { border-left: 4px solid #2b6b3e; padding: 14px 16px; background: #f0fff4; border-radius: 0 8px 8px 0; margin-bottom: 10px; }
+.rec-card.warn { border-left-color: #d97706; background: #fffbeb; }
+.rec-card.danger { border-left-color: #c53030; background: #fff5f5; }
+.rec-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.rec-body { font-size: 12px; color: #4a5568; line-height: 1.5; }
+.rec-action { font-size: 11px; font-weight: 600; color: #2b6b3e; margin-top: 6px; cursor: pointer; }
 
 /* Quality bars */
-.quality-bar-wrap { margin-bottom: 10px; }
-.quality-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
-.quality-bar-bg { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-.quality-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.qbar { margin-bottom: 8px; }
+.qbar-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
+.qbar-bg { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.qbar-fill { height: 100%; border-radius: 3px; }
+
+/* SP link */
+.sp-link { color: #2b6b3e; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.sp-link:hover { color: #224f2f; }
 
 /* Loading */
 .loading { text-align: center; padding: 60px; color: #718096; }
-.spinner {
-    width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #2b6b3e;
-    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-}
+.spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #2b6b3e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Tab panels */
+.panel { display: none; }
+.panel.active { display: block; }
+
 /* Responsive */
-@media (max-width: 1024px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) { .g5, .g6 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) {
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-    .chart-row { grid-template-columns: 1fr; }
-    .content { padding: 16px; }
-    .header { padding: 12px 16px; }
-    .alert-grid { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { width: 60px; } .sidebar-brand span, .nav-section, .nav-item span:not(.nav-icon), .nav-item .nav-badge, .sidebar-footer { display: none; }
+    .sidebar-brand { justify-content: center; padding: 16px 8px; } .nav-item { justify-content: center; padding: 12px 0; }
+    .main { margin-left: 60px; } .g2, .g3 { grid-template-columns: 1fr; } .content { padding: 16px; }
 }
 </style>
 </head>
@@ -173,7 +187,7 @@ tbody tr:hover { background: #f7fafc; }
 <div id="login-overlay">
     <div class="login-card">
         <div style="width:48px;height:48px;background:#2b6b3e;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#fff;font-weight:700;font-size:20px;">P</div>
-        <h1>PINE Agreement Dashboard</h1>
+        <h1>PINE Agreement Platform</h1>
         <p>Sign in with your credentials</p>
         <input type="text" id="login-username" placeholder="Username" autofocus>
         <input type="password" id="login-password" placeholder="Password">
@@ -184,626 +198,589 @@ tbody tr:hover { background: #f7fafc; }
 
 <!-- App -->
 <div class="app" id="app">
-    <div class="header">
-        <div class="header-left">
-            <div class="logo">P</div>
-            <h1>PINE Agreement Dashboard</h1>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand"><div class="logo">P</div><span>PINE Advisors</span></div>
+        <div class="sidebar-nav">
+            <div class="nav-section">Analytics</div>
+            <div class="nav-item active" onclick="go('overview')"><span class="nav-icon">&#9632;</span><span>Overview</span></div>
+            <div class="nav-item" onclick="go('portfolio')"><span class="nav-icon">&#9776;</span><span>Portfolio</span></div>
+            <div class="nav-item" onclick="go('renewals')"><span class="nav-icon">&#8635;</span><span>Renewals</span></div>
+            <div class="nav-item" onclick="go('escalators')"><span class="nav-icon">&#8593;</span><span>Escalators</span></div>
+            <div class="nav-section">Operations</div>
+            <div class="nav-item" onclick="go('alerts')"><span class="nav-icon">&#9888;</span><span>Alerts</span><span class="nav-badge" id="alert-count">0</span></div>
+            <div class="nav-item" onclick="go('fees')"><span class="nav-icon">&#36;</span><span>Fee Analysis</span></div>
+            <div class="nav-item" onclick="go('revenue')"><span class="nav-icon">&#9733;</span><span>Revenue</span></div>
+            <div class="nav-section">Resources</div>
+            <div class="nav-item" onclick="go('documents')"><span class="nav-icon">&#128196;</span><span>Documents</span></div>
+            <div class="nav-item" onclick="go('quality')"><span class="nav-icon">&#10003;</span><span>Data Quality</span></div>
         </div>
-        <div class="header-right">
-            <span class="refresh-time" id="refresh-time"></span>
-            <button onclick="refreshAll()">Refresh Data</button>
-            <span style="font-size:13px;color:#4a5568;" id="user-display"></span>
-            <button onclick="doLogout()" style="background:#718096;">Sign Out</button>
-        </div>
+        <div class="sidebar-footer">Signed in as<br><span class="user-name" id="sidebar-user"></span></div>
     </div>
 
-    <div class="content">
-        <!-- Tabs -->
-        <div class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
-            <button class="tab-btn" onclick="switchTab('agreements')">Agreements</button>
-            <button class="tab-btn" onclick="switchTab('alerts')">Alerts</button>
-            <button class="tab-btn" onclick="switchTab('fees')">Fee Analysis</button>
-            <button class="tab-btn" onclick="switchTab('quality')">Data Quality</button>
-        </div>
-
-        <!-- OVERVIEW TAB -->
-        <div class="tab-panel active" id="tab-overview">
-            <div class="kpi-row" id="kpi-row">
-                <div class="kpi-card"><div class="kpi-label">Loading...</div></div>
-            </div>
-            <div class="chart-row">
-                <div class="card">
-                    <h3>Agreement Status Distribution</h3>
-                    <canvas id="chart-status" height="260"></canvas>
-                </div>
-                <div class="card">
-                    <h3>Revenue by Business Line</h3>
-                    <canvas id="chart-bizline" height="260"></canvas>
-                </div>
-            </div>
-            <div class="chart-row">
-                <div class="card">
-                    <h3>Governing Law Distribution</h3>
-                    <canvas id="chart-govlaw" height="220"></canvas>
-                </div>
-                <div class="card">
-                    <h3>CPI Escalation by Business Line</h3>
-                    <canvas id="chart-cpi" height="220"></canvas>
-                </div>
+    <!-- Main -->
+    <div class="main">
+        <div class="topbar">
+            <h2 id="page-title">Overview</h2>
+            <div class="topbar-actions">
+                <span class="refresh-time" id="refresh-time"></span>
+                <button class="btn btn-primary" onclick="refreshAll()">&#8635; Refresh</button>
+                <button class="btn btn-secondary" onclick="doLogout()">Sign Out</button>
             </div>
         </div>
-
-        <!-- AGREEMENTS TAB -->
-        <div class="tab-panel" id="tab-agreements">
-            <div class="card card-full">
-                <h3>All Agreements</h3>
-                <div class="toolbar">
-                    <input type="text" id="search-agreements" placeholder="Search by client, contract, or status...">
-                    <select id="filter-status"><option value="">All Statuses</option></select>
-                    <select id="filter-type"><option value="">All Agreement Types</option></select>
-                </div>
-                <div class="table-wrap">
-                    <table id="table-agreements">
-                        <thead><tr>
-                            <th onclick="sortTable('agreements',0)">Client</th>
-                            <th onclick="sortTable('agreements',1)">Agreement Type</th>
-                            <th onclick="sortTable('agreements',2)">Status</th>
-                            <th onclick="sortTable('agreements',3)">Execution Date</th>
-                            <th onclick="sortTable('agreements',4)">Next Renewal</th>
-                            <th onclick="sortTable('agreements',5)">Contract Fee</th>
-                            <th onclick="sortTable('agreements',6)">Governing Law</th>
-                            <th onclick="sortTable('agreements',7)">CPI</th>
-                        </tr></thead>
-                        <tbody id="tbody-agreements"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ALERTS TAB -->
-        <div class="tab-panel" id="tab-alerts">
-            <div class="alert-grid" id="alert-summary"></div>
-            <div class="card card-full">
-                <h3>All Flagged Records</h3>
-                <div class="toolbar">
-                    <input type="text" id="search-alerts" placeholder="Search alerts...">
-                    <select id="filter-alert-type"><option value="">All Alert Types</option></select>
-                </div>
-                <div class="table-wrap">
-                    <table id="table-alerts">
-                        <thead><tr>
-                            <th>Client</th>
-                            <th>Alert Type</th>
-                            <th>Status</th>
-                            <th>Agreement Type</th>
-                            <th>Details</th>
-                        </tr></thead>
-                        <tbody id="tbody-alerts"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- FEES TAB -->
-        <div class="tab-panel" id="tab-fees">
-            <div class="kpi-row" id="fee-kpis"></div>
-            <div class="chart-row">
-                <div class="card">
-                    <h3>Fee Status Distribution</h3>
-                    <canvas id="chart-fee-status" height="260"></canvas>
-                </div>
-                <div class="card">
-                    <h3>Top 10 Fee Variances</h3>
-                    <canvas id="chart-fee-variance" height="260"></canvas>
-                </div>
-            </div>
-            <div class="card card-full" style="margin-top:16px;">
-                <h3>Fee Analysis Detail</h3>
-                <div class="toolbar">
-                    <input type="text" id="search-fees" placeholder="Search fee records...">
-                </div>
-                <div class="table-wrap">
-                    <table id="table-fees">
-                        <thead><tr>
-                            <th>Client</th>
-                            <th>Contract Fee</th>
-                            <th>Billing Fee</th>
-                            <th>Variance</th>
-                            <th>Fee Status</th>
-                        </tr></thead>
-                        <tbody id="tbody-fees"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- QUALITY TAB -->
-        <div class="tab-panel" id="tab-quality">
-            <div class="kpi-row" id="quality-kpis"></div>
-            <div class="chart-row">
-                <div class="card">
-                    <h3>Quality Tier Distribution</h3>
-                    <canvas id="chart-quality-tier" height="260"></canvas>
-                </div>
-                <div class="card">
-                    <h3>Field Completeness</h3>
-                    <div id="completeness-bars"></div>
-                </div>
-            </div>
+        <div class="content" id="content">
+            <div class="loading"><div class="spinner"></div>Loading dashboard data...</div>
         </div>
     </div>
 </div>
 
 <script>
-const BASE = window.location.origin;
-let AUTH_TOKEN = '';
-let CURRENT_USER = '';
-let DATA = {};
-let sortState = {};
+const B = window.location.origin;
+let TK = '', USR = '', DATA = {};
 
-// Login
+// ── Auth ──
 async function doLogin() {
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-    if (!username || !password) return;
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value.trim();
+    if (!u||!p) return;
     try {
-        const res = await fetch(BASE + '/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        if (!res.ok) throw new Error('Unauthorized');
-        const data = await res.json();
-        AUTH_TOKEN = data.token;
-        CURRENT_USER = data.user;
-        sessionStorage.setItem('pine_token', AUTH_TOKEN);
-        sessionStorage.setItem('pine_user', CURRENT_USER);
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('user-display').textContent = CURRENT_USER;
-        refreshAll();
-    } catch (e) {
-        document.getElementById('login-error').style.display = 'block';
+        const r = await fetch(B+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+        if(!r.ok) throw 0;
+        const d = await r.json(); TK=d.token; USR=d.user;
+        sessionStorage.setItem('pt',TK); sessionStorage.setItem('pu',USR);
+        enter();
+    } catch(e){ document.getElementById('login-error').style.display='block'; }
+}
+function enter(){ document.getElementById('login-overlay').style.display='none'; document.getElementById('app').style.display='block'; document.getElementById('sidebar-user').textContent=USR; refreshAll(); }
+function doLogout(){ TK='';USR='';sessionStorage.clear(); document.getElementById('login-overlay').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('login-error').style.display='none'; }
+document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+(function(){ const t=sessionStorage.getItem('pt'),u=sessionStorage.getItem('pu'); if(t){TK=t;USR=u||'';enter();}})();
+
+async function F(p){ const r=await fetch(B+p,{headers:{Authorization:'Bearer '+TK}}); if(r.status===401){doLogout();throw 0;} return r.json(); }
+
+async function refreshAll(){
+    document.getElementById('refresh-time').textContent='Loading...';
+    try{
+        const[master,alerts,cpi,fees,clients,biz,quality]=await Promise.all([F('/api/contracts/master'),F('/api/contracts/alerts'),F('/api/contracts/cpi'),F('/api/contracts/fee-analysis'),F('/api/contracts/client-summary'),F('/api/contracts/biz-line-summary'),F('/api/contracts/data-quality')]);
+        DATA={master,alerts,cpi,fees,clients,biz,quality};
+        document.getElementById('alert-count').textContent=alerts.count;
+        document.getElementById('refresh-time').textContent='Updated '+new Date().toLocaleTimeString();
+        go(currentView||'overview');
+    }catch(e){ document.getElementById('refresh-time').textContent='Error'; console.error(e); }
+}
+
+// ── Navigation ──
+let currentView = 'overview';
+function go(v){
+    currentView=v;
+    document.querySelectorAll('.nav-item').forEach((n,i)=>{n.classList.toggle('active',n.getAttribute('onclick')===`go('${v}')`)});
+    const titles={overview:'Overview',portfolio:'Portfolio Explorer',renewals:'Renewals & Expirations',escalators:'Fee Escalators',alerts:'Alerts & Actions',fees:'Fee Analysis',revenue:'Revenue Optimizer',documents:'Document Vault',quality:'Data Quality'};
+    document.getElementById('page-title').textContent=titles[v]||v;
+    const fn={overview:rOverview,portfolio:rPortfolio,renewals:rRenewals,escalators:rEscalators,alerts:rAlerts,fees:rFees,revenue:rRevenue,documents:rDocuments,quality:rQuality};
+    if(fn[v]&&DATA.master) fn[v]();
+}
+
+// ── Helpers ──
+function $(v){return parseFloat(v)||0}
+function fmt$(v){const n=$(v);if(Math.abs(n)>=1e6)return'$'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return'$'+(n/1e3).toFixed(0)+'K';return'$'+n.toLocaleString();}
+function fD(v){if(!v||v==='None'||v==='null')return'—';const d=new Date(v);return isNaN(d)?'—':d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fDshort(v){if(!v||v==='None'||v==='null')return null;const d=new Date(v);return isNaN(d)?null:d;}
+function bStat(s){if(!s||s==='None')return'<span class="b b-gray">Unknown</span>';const l=s.toLowerCase();if(l.includes('current'))return`<span class="b b-green">${s}</span>`;if(l.includes('draft'))return`<span class="b b-amber">${s}</span>`;if(l.includes('superseded'))return`<span class="b b-gray">${s}</span>`;if(l.includes('no agreement'))return`<span class="b b-red">${s}</span>`;return`<span class="b b-blue">${s}</span>`;}
+function bAlert(t){if(!t)return'';const l=t.toLowerCase();if(l.includes('over-billing')||l.includes('no agreement'))return`<span class="b b-red">${t}</span>`;if(l.includes('draft')||l.includes('unknown'))return`<span class="b b-amber">${t}</span>`;return`<span class="b b-gray">${t}</span>`;}
+function cnt(a,k){const m={};a.forEach(r=>{const v=r[k]||'Not Specified';m[v]=(m[v]||0)+1});return m;}
+function sum(a,k){return a.reduce((s,r)=>s+$(r[k]),0);}
+function gc(d,n){const c=d.columns||[];const l=n.toLowerCase();return c.find(x=>x.toLowerCase()===l)||c.find(x=>x.toLowerCase().includes(l))||n;}
+function daysUntil(v){const d=fDshort(v);if(!d)return null;return Math.ceil((d-new Date())/(864e5));}
+let CI={};function dc(id){if(CI[id]){CI[id].destroy();delete CI[id];}}
+function H(id){return document.getElementById(id);}
+function setContent(html){document.getElementById('content').innerHTML=html;}
+
+// ══════════════════════════════════════════
+// 1. OVERVIEW
+// ══════════════════════════════════════════
+function rOverview(){
+    const d=DATA.master.data, biz=DATA.biz.data;
+    const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'), cFee=gc(DATA.fees,'contract_fee_total'), cQ=gc(DATA.quality,'quality_score');
+    const statuses=cnt(d,cS);
+    const current=d.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
+    const totalFee=sum(DATA.fees.data,cFee);
+    const avgQ=DATA.quality.data.length?(sum(DATA.quality.data,cQ)/DATA.quality.data.length).toFixed(1):'—';
+    const cRen=gc(DATA.master,'next_renewal_date'), cTerm=gc(DATA.master,'term_expiration');
+    const soon=d.filter(r=>{const du=daysUntil(r[cRen])||daysUntil(r[cTerm]);return du!==null&&du>=0&&du<=90;}).length;
+
+    setContent(`
+        <div class="g6">
+            <div class="card kpi"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses</div></div>
+            <div class="card kpi green"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio</div></div>
+            <div class="card kpi blue"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">All agreements</div></div>
+            <div class="card kpi amber"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation</div></div>
+            <div class="card kpi red"><div class="kpi-label">Renew in 90d</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Action needed</div></div>
+            <div class="card kpi"><div class="kpi-label">Avg Quality</div><div class="kpi-val">${avgQ}</div><div class="kpi-sub">Out of 100</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Status Distribution</h3><canvas id="c-status" height="260"></canvas></div>
+            <div class="card"><h3>Revenue by Business Line</h3><canvas id="c-biz" height="260"></canvas></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Governing Law</h3><canvas id="c-gov" height="220"></canvas></div>
+            <div class="card"><h3>CPI by Business Line</h3><canvas id="c-cpi" height="220"></canvas></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Agreement Type Breakdown</h3><canvas id="c-type" height="220"></canvas></div>
+            <div class="card"><h3>Dispute Resolution</h3><canvas id="c-dispute" height="220"></canvas></div>
+        </div>
+    `);
+
+    // Status donut
+    dc('c-status');
+    const sL=Object.keys(statuses),sC=sL.map(s=>{const l=s.toLowerCase();if(l.includes('current'))return'#2b6b3e';if(l.includes('draft'))return'#d97706';if(l.includes('superseded'))return'#718096';if(l.includes('no agreement'))return'#c53030';return'#4299e1';});
+    CI['c-status']=new Chart(H('c-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:Object.values(statuses),backgroundColor:sC,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},padding:10}}}}});
+
+    // Biz bar
+    dc('c-biz');
+    const bCol=gc(DATA.biz,'business_line'),bFee=gc(DATA.biz,'total_contract_fees');
+    const bL=biz.map(r=>{let n=r[bCol]||'?';return n.length>28?n.substring(0,26)+'...':n;}),bV=biz.map(r=>$(r[bFee]));
+    CI['c-biz']=new Chart(H('c-biz'),{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
+
+    // Gov law
+    dc('c-gov');
+    const cG=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
+    const gC=cnt(d,cG),gS=Object.entries(gC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    CI['c-gov']=new Chart(H('c-gov'),{type:'bar',data:{labels:gS.map(e=>e[0]),datasets:[{data:gS.map(e=>e[1]),backgroundColor:'#38855a',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
+
+    // CPI stacked
+    dc('c-cpi');
+    const bCpi=gc(DATA.biz,'cpi_clients'),bTot=gc(DATA.biz,'total_clients');
+    CI['c-cpi']=new Chart(H('c-cpi'),{type:'bar',data:{labels:bL,datasets:[{label:'CPI',data:biz.map(r=>$(r[bCpi])),backgroundColor:'#2b6b3e',borderRadius:4},{label:'No CPI',data:biz.map(r=>$(r[bTot])-$(r[bCpi])),backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{font:{family:'Inter',size:11}}}},scales:{x:{stacked:true},y:{stacked:true}}}});
+
+    // Agreement type
+    dc('c-type');
+    const cT=gc(DATA.master,'agreement_type'),tC=cnt(d,cT),tS=Object.entries(tC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const tColors=['#2b6b3e','#38855a','#4a9e6e','#d97706','#4299e1','#718096','#9f7aea','#ed8936'];
+    CI['c-type']=new Chart(H('c-type'),{type:'doughnut',data:{labels:tS.map(e=>e[0]),datasets:[{data:tS.map(e=>e[1]),backgroundColor:tColors,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+
+    // Dispute
+    dc('c-dispute');
+    const cD=gc(DATA.master,'dispute_type'),dC=cnt(d,cD);
+    CI['c-dispute']=new Chart(H('c-dispute'),{type:'doughnut',data:{labels:Object.keys(dC),datasets:[{data:Object.values(dC),backgroundColor:['#718096','#2b6b3e','#c53030','#4299e1'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+}
+
+// ══════════════════════════════════════════
+// 2. PORTFOLIO (Parent → Client → Agreement)
+// ══════════════════════════════════════════
+function rPortfolio(){
+    const d=DATA.master.data;
+    const cP=gc(DATA.master,'parent_entity'), cC=gc(DATA.master,'client_legal_name'), cN=gc(DATA.master,'contract_name');
+    const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'), cT=gc(DATA.master,'agreement_type');
+    const cFee=gc(DATA.master,'contract_fee_1'), cCpi=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
+    const cExec=gc(DATA.master,'execution_date'), cSP=gc(DATA.master,'sharepoint_path')||gc(DATA.master,'new_file_path');
+
+    // Build tree: parent → clients → agreements
+    const tree={};
+    d.forEach(r=>{
+        const parent=r[cP]||r[cC]||'Unknown';
+        const client=r[cC]||'Unknown';
+        if(!tree[parent])tree[parent]={clients:{},count:0,totalFee:0};
+        if(!tree[parent].clients[client])tree[parent].clients[client]=[];
+        tree[parent].clients[client].push(r);
+        tree[parent].count++;
+        tree[parent].totalFee+=$(r[cFee]);
+    });
+
+    const parentsSorted=Object.entries(tree).sort((a,b)=>b[1].count-a[1].count);
+
+    setContent(`
+        <div class="toolbar"><input type="text" id="tree-search" placeholder="Search parent companies, clients, or agreements..."></div>
+        <div class="card" style="padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:8px;">
+                <span style="font-size:12px;color:#718096;">${parentsSorted.length} parent entities &middot; ${d.length} agreements</span>
+                <button class="btn btn-secondary" onclick="toggleAllTree()">Expand All</button>
+            </div>
+            <div id="tree-container" class="tree">${parentsSorted.map(([pName,pData],pi)=>{
+                const clientEntries=Object.entries(pData.clients).sort((a,b)=>b[1].length-a[1].length);
+                return `<div class="tree-parent" data-search="${pName.toLowerCase()}">
+                    <div class="tree-parent-header" onclick="toggleParent(${pi})">
+                        <span class="arrow" id="pa-${pi}">&#9654;</span>
+                        <strong>${pName}</strong>
+                        <div class="stats">
+                            <span>${clientEntries.length} client${clientEntries.length>1?'s':''}</span>
+                            <span>${pData.count} agreement${pData.count>1?'s':''}</span>
+                            <span>${fmt$(pData.totalFee)}</span>
+                        </div>
+                    </div>
+                    <div class="tree-children" id="pc-${pi}">${clientEntries.map(([cName,agrs],ci)=>{
+                        const cid=`${pi}-${ci}`;
+                        return `<div class="tree-client" data-search="${cName.toLowerCase()}">
+                            <div class="tree-client-header" onclick="toggleClient('${cid}')">
+                                <span class="arrow" id="ca-${cid}">&#9654;</span>
+                                <span>${cName}</span>
+                                <div class="stats">
+                                    <span>${agrs.length} agreement${agrs.length>1?'s':''}</span>
+                                    <span>${fmt$(sum(agrs,cFee))}</span>
+                                </div>
+                            </div>
+                            <div class="tree-agreements" id="cc-${cid}">${agrs.map(r=>`
+                                <div class="tree-agreement">
+                                    <span class="agr-name">${r[cN]||r[cT]||'Agreement'}</span>
+                                    <div class="agr-meta">
+                                        ${bStat(r[cS])}
+                                        <span>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</span>
+                                        <span>${fD(r[cExec])}</span>
+                                        <span>${r[cFee]&&r[cFee]!=='None'?fmt$(r[cFee]):'—'}</span>
+                                        ${r[cCpi]&&r[cCpi].toLowerCase().includes('yes')?'<span class="b b-green">CPI</span>':''}
+                                        ${r[cSP]&&r[cSP]!=='None'?`<a href="${r[cSP]}" target="_blank" class="sp-link">&#128196; Open</a>`:''}
+                                    </div>
+                                </div>
+                            `).join('')}</div>
+                        </div>`;
+                    }).join('')}</div>
+                </div>`;
+            }).join('')}</div>
+        </div>
+    `);
+    H('tree-search').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.tree-parent').forEach(p=>{p.style.display=p.getAttribute('data-search').includes(q)||q===''?'':'none';});};
+}
+function toggleParent(i){const c=H('pc-'+i),a=H('pa-'+i);c.classList.toggle('open');a.classList.toggle('open');}
+function toggleClient(id){const c=H('cc-'+id),a=H('ca-'+id);c.classList.toggle('open');a.classList.toggle('open');}
+function toggleAllTree(){document.querySelectorAll('.tree-children,.tree-agreements').forEach(e=>e.classList.toggle('open'));document.querySelectorAll('.arrow').forEach(a=>a.classList.toggle('open'));}
+
+// ══════════════════════════════════════════
+// 3. RENEWALS & EXPIRATIONS
+// ══════════════════════════════════════════
+function rRenewals(){
+    const d=DATA.master.data;
+    const cC=gc(DATA.master,'client_legal_name'), cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status');
+    const cRen=gc(DATA.master,'next_renewal_date'), cTerm=gc(DATA.master,'term_expiration'), cAuto=gc(DATA.master,'auto_renewal_flag')||gc(DATA.master,'autorenewal_yesno_terms');
+    const cFee=gc(DATA.master,'contract_fee_1'), cT=gc(DATA.master,'agreement_type');
+
+    const withDates=d.map(r=>{
+        const renDays=daysUntil(r[cRen]), termDays=daysUntil(r[cTerm]);
+        const days=renDays!==null?renDays:(termDays!==null?termDays:null);
+        const dateVal=r[cRen]&&r[cRen]!=='None'?r[cRen]:r[cTerm];
+        return {...r,_days:days,_dateVal:dateVal,_type:renDays!==null?'Renewal':'Expiration'};
+    }).filter(r=>r._days!==null&&r._days>=-30).sort((a,b)=>a._days-b._days);
+
+    const urgent=withDates.filter(r=>r._days>=0&&r._days<=30).length;
+    const soon=withDates.filter(r=>r._days>30&&r._days<=90).length;
+    const upcoming=withDates.filter(r=>r._days>90&&r._days<=180).length;
+    const later=withDates.filter(r=>r._days>180).length;
+
+    setContent(`
+        <div class="g4">
+            <div class="card kpi red"><div class="kpi-label">Within 30 Days</div><div class="kpi-val">${urgent}</div><div class="kpi-sub">Immediate action</div></div>
+            <div class="card kpi amber"><div class="kpi-label">30 – 90 Days</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Plan review</div></div>
+            <div class="card kpi blue"><div class="kpi-label">90 – 180 Days</div><div class="kpi-val">${upcoming}</div><div class="kpi-sub">On the horizon</div></div>
+            <div class="card kpi green"><div class="kpi-label">180+ Days</div><div class="kpi-val">${later}</div><div class="kpi-sub">No rush</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Renewal Timeline</h3><canvas id="c-ren-timeline" height="280"></canvas></div>
+            <div class="card"><h3>Upcoming Actions</h3>
+                <div class="timeline" id="renewal-timeline">${withDates.slice(0,15).map(r=>{
+                    const cls=r._days<=30?'urgent':r._days<=90?'soon':'';
+                    return `<div class="tl-item ${cls}"><div class="tl-date">${fD(r._dateVal)} (${r._days}d)</div><div class="tl-title">${r[cC]}</div><div class="tl-sub">${r._type} &middot; ${r[cT]&&r[cT]!=='None'?r[cT]:''} &middot; ${fmt$(r[cFee])}</div></div>`;
+                }).join('')}</div>
+            </div>
+        </div>
+        <div class="card"><h3>All Renewals & Expirations</h3>
+            <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Days Out</th><th>Event</th><th>Auto-Renew</th><th>Fee</th><th>Status</th></tr></thead>
+            <tbody>${withDates.map(r=>{
+                const cls=r._days<=30?'row-danger':r._days<=90?'row-warn':'';
+                return `<tr class="${cls}"><td><strong>${r[cC]}</strong></td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td><td>${fD(r._dateVal)}</td><td><strong>${r._days}d</strong></td><td>${r._type}</td><td>${r[cAuto]&&r[cAuto]!=='None'?r[cAuto]:'—'}</td><td>${fmt$(r[cFee])}</td><td>${bStat(r[cS])}</td></tr>`;
+            }).join('')}</tbody></table></div>
+        </div>
+    `);
+
+    // Timeline chart
+    dc('c-ren-timeline');
+    const buckets={'Overdue':0,'0-30d':0,'31-60d':0,'61-90d':0,'91-180d':0,'180d+':0};
+    withDates.forEach(r=>{if(r._days<0)buckets['Overdue']++;else if(r._days<=30)buckets['0-30d']++;else if(r._days<=60)buckets['31-60d']++;else if(r._days<=90)buckets['61-90d']++;else if(r._days<=180)buckets['91-180d']++;else buckets['180d+']++;});
+    CI['c-ren-timeline']=new Chart(H('c-ren-timeline'),{type:'bar',data:{labels:Object.keys(buckets),datasets:[{data:Object.values(buckets),backgroundColor:['#c53030','#e53e3e','#d97706','#ecc94b','#4299e1','#2b6b3e'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
+}
+
+// ══════════════════════════════════════════
+// 4. ESCALATORS
+// ══════════════════════════════════════════
+function rEscalators(){
+    const d=DATA.cpi.data;
+    const cC=gc(DATA.cpi,'client_legal_name'), cP=gc(DATA.cpi,'parent_entity');
+    const cCpi=gc(DATA.cpi,'cpi_fee_escalation')||gc(DATA.cpi,'cpi_flag');
+    const cFee=gc(DATA.cpi,'contract_fee_1'), cS=gc(DATA.cpi,'status_clean')||gc(DATA.cpi,'status');
+    const cT=gc(DATA.cpi,'agreement_type'), cBiz=gc(DATA.cpi,'business_line_1');
+    const cExec=gc(DATA.cpi,'execution_date'), cRen=gc(DATA.cpi,'next_renewal_date');
+
+    const totalCpiFee=sum(d,cFee);
+    const bizBreak=cnt(d,cBiz);
+
+    setContent(`
+        <div class="g4">
+            <div class="card kpi green"><div class="kpi-label">CPI-Linked Contracts</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${DATA.master.data.length?((d.length/DATA.master.data.length)*100).toFixed(0):'0'}% of portfolio</div></div>
+            <div class="card kpi blue"><div class="kpi-label">CPI Contract Value</div><div class="kpi-val">${fmt$(totalCpiFee)}</div><div class="kpi-sub">Subject to escalation</div></div>
+            <div class="card kpi amber"><div class="kpi-label">Business Lines</div><div class="kpi-val">${Object.keys(bizBreak).length}</div><div class="kpi-sub">With CPI clauses</div></div>
+            <div class="card kpi"><div class="kpi-label">Avg Fee (CPI)</div><div class="kpi-val">${d.length?fmt$(totalCpiFee/d.length):'—'}</div><div class="kpi-sub">Per contract</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>CPI Contracts by Business Line</h3><canvas id="c-esc-biz" height="260"></canvas></div>
+            <div class="card"><h3>CPI vs Non-CPI Value</h3><canvas id="c-esc-val" height="260"></canvas></div>
+        </div>
+        <div class="card"><h3>All CPI / Fee Escalation Contracts</h3>
+            <div class="toolbar"><input type="text" id="esc-search" placeholder="Search escalator contracts..."></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Parent</th><th>Client</th><th>Agreement Type</th><th>Business Line</th><th>Contract Fee</th><th>Execution Date</th><th>Renewal</th><th>Status</th><th>CPI Detail</th></tr></thead>
+            <tbody id="esc-tbody"></tbody></table></div>
+        </div>
+    `);
+
+    function renderEsc(){
+        const q=H('esc-search').value.toLowerCase();
+        const f=d.filter(r=>!q||(r[cC]+''+r[cP]+''+r[cBiz]).toLowerCase().includes(q));
+        H('esc-tbody').innerHTML=f.map(r=>`<tr><td>${r[cP]&&r[cP]!=='None'?r[cP]:'—'}</td><td><strong>${r[cC]}</strong></td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td><td>${r[cBiz]&&r[cBiz]!=='None'?r[cBiz]:'—'}</td><td>${fmt$(r[cFee])}</td><td>${fD(r[cExec])}</td><td>${fD(r[cRen])}</td><td>${bStat(r[cS])}</td><td><span class="b b-green">CPI</span></td></tr>`).join('');
     }
-}
-document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    renderEsc();
+    H('esc-search').oninput=renderEsc;
 
-// Check saved session
-(function() {
-    const saved = sessionStorage.getItem('pine_token');
-    const user = sessionStorage.getItem('pine_user');
-    if (saved) {
-        AUTH_TOKEN = saved;
-        CURRENT_USER = user || '';
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('user-display').textContent = CURRENT_USER;
-        refreshAll();
+    dc('c-esc-biz');
+    const bS=Object.entries(bizBreak).sort((a,b)=>b[1]-a[1]);
+    CI['c-esc-biz']=new Chart(H('c-esc-biz'),{type:'bar',data:{labels:bS.map(e=>e[0].length>28?e[0].substring(0,26)+'...':e[0]),datasets:[{data:bS.map(e=>e[1]),backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter',size:10}}}}}});
+
+    dc('c-esc-val');
+    const nonCpiFee=sum(DATA.fees.data,gc(DATA.fees,'contract_fee_total'))-totalCpiFee;
+    CI['c-esc-val']=new Chart(H('c-esc-val'),{type:'doughnut',data:{labels:['CPI-Linked','Non-CPI'],datasets:[{data:[totalCpiFee,Math.max(0,nonCpiFee)],backgroundColor:['#2b6b3e','#e2e8f0'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:12}}}}}});
+}
+
+// ══════════════════════════════════════════
+// 5. ALERTS & ACTIONS
+// ══════════════════════════════════════════
+function rAlerts(){
+    const d=DATA.alerts.data;
+    const cC=gc(DATA.alerts,'client_legal_name'), cA=gc(DATA.alerts,'alert_type');
+    const cS=gc(DATA.alerts,'status_clean')||gc(DATA.alerts,'status'), cT=gc(DATA.alerts,'agreement_type');
+    const aC=cnt(d,cA), sorted=Object.entries(aC).sort((a,b)=>b[1]-a[1]);
+
+    setContent(`
+        <div class="g3">${sorted.map(([type,count])=>{
+            const l=type.toLowerCase();let c=l.includes('over-billing')||l.includes('no agreement')?'red':l.includes('draft')||l.includes('unknown')?'amber':'';
+            return `<div class="card kpi ${c}"><div class="kpi-val">${count}</div><div class="kpi-label">${type}</div></div>`;
+        }).join('')}</div>
+        <div class="g2">
+            <div class="card"><h3>Alert Distribution</h3><canvas id="c-alert-dist" height="260"></canvas></div>
+            <div class="card"><h3>Recommended Actions</h3><div id="recs"></div></div>
+        </div>
+        <div class="card"><h3>All Flagged Records (${d.length})</h3>
+            <div class="toolbar">
+                <input type="text" id="alert-search" placeholder="Search alerts...">
+                <select id="alert-filter"><option value="">All Types</option>${sorted.map(([t])=>`<option>${t}</option>`).join('')}</select>
+            </div>
+            <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Alert Type</th><th>Status</th><th>Agreement Type</th></tr></thead><tbody id="alert-tbody"></tbody></table></div>
+        </div>
+    `);
+
+    // Recommendations
+    const recs=[];
+    const noAgr=aC['NO AGREEMENT ON FILE']||0;
+    if(noAgr>0)recs.push({t:'Obtain Missing Agreements',b:`${noAgr} clients have no agreement on file. Prioritize executing new agreements to reduce compliance risk.`,cls:'danger'});
+    const drafts=aC['UNSIGNED DRAFT']||0;
+    if(drafts>0)recs.push({t:'Finalize Draft Agreements',b:`${drafts} unsigned drafts pending. Follow up with clients for signatures to formalize fee arrangements.`,cls:'warn'});
+    const overbill=aC['FEE OVER-BILLING 73%']||aC['FEE OVER-BILLING']||0;
+    if(overbill>0)recs.push({t:'Review Over-Billing Discrepancies',b:`${overbill} agreement(s) show billing exceeds contracted rates. Investigate and reconcile immediately.`,cls:'danger'});
+    const lowQ=aC['LOW DATA QUALITY']||0;
+    if(lowQ>0)recs.push({t:'Improve Data Completeness',b:`${lowQ} records scored Low quality. Enrich missing fields like governing law, billing frequency, and contacts.`,cls:''});
+    recs.push({t:'Schedule Quarterly Agreement Audits',b:'Establish a regular cadence for reviewing agreement portfolio health, escalators, and renewal timelines.',cls:''});
+    H('recs').innerHTML=recs.map(r=>`<div class="rec-card ${r.cls}"><div class="rec-title">${r.t}</div><div class="rec-body">${r.b}</div></div>`).join('');
+
+    function renderAlerts(){
+        const q=H('alert-search').value.toLowerCase(),ft=H('alert-filter').value;
+        const f=d.filter(r=>{if(ft&&r[cA]!==ft)return false;if(q)return(r[cC]+''+r[cA]).toLowerCase().includes(q);return true;});
+        H('alert-tbody').innerHTML=f.map(r=>`<tr><td><strong>${r[cC]||'—'}</strong></td><td>${bAlert(r[cA])}</td><td>${bStat(r[cS])}</td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td></tr>`).join('');
     }
-})();
+    renderAlerts();
+    H('alert-search').oninput=renderAlerts;
+    H('alert-filter').onchange=renderAlerts;
 
-function doLogout() {
-    AUTH_TOKEN = '';
-    CURRENT_USER = '';
-    sessionStorage.removeItem('pine_token');
-    sessionStorage.removeItem('pine_user');
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('login-error').style.display = 'none';
-    document.getElementById('login-username').value = '';
-    document.getElementById('login-password').value = '';
+    dc('c-alert-dist');
+    const aColors=sorted.map(([t])=>{const l=t.toLowerCase();if(l.includes('over-billing')||l.includes('no agreement'))return'#c53030';if(l.includes('draft')||l.includes('unknown'))return'#d97706';if(l.includes('review'))return'#4299e1';return'#718096';});
+    CI['c-alert-dist']=new Chart(H('c-alert-dist'),{type:'doughnut',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:aColors,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:10},padding:8}}}}});
 }
 
-async function apiFetch(path) {
-    const res = await fetch(BASE + path, { headers: { 'Authorization': 'Bearer ' + AUTH_TOKEN } });
-    if (res.status === 401) { doLogout(); throw new Error('Unauthorized'); }
-    return res.json();
-}
+// ══════════════════════════════════════════
+// 6. FEE ANALYSIS
+// ══════════════════════════════════════════
+function rFees(){
+    const d=DATA.fees.data;
+    const cC=gc(DATA.fees,'client_legal_name'),cCF=gc(DATA.fees,'contract_fee_total'),cBF=gc(DATA.fees,'billing_fee_total');
+    const cV=gc(DATA.fees,'fee_variance_total')||gc(DATA.fees,'fee_variance'),cFS=gc(DATA.fees,'fee_status');
+    const tC=sum(d,cCF),tB=sum(d,cBF);
+    const over=d.filter(r=>(r[cFS]||'').toLowerCase().includes('billing > contract'));
+    const under=d.filter(r=>(r[cFS]||'').toLowerCase().includes('contract > billing'));
 
-async function refreshAll() {
-    document.getElementById('refresh-time').textContent = 'Loading...';
-    try {
-        const [master, alerts, cpi, fees, clients, bizline, quality] = await Promise.all([
-            apiFetch('/api/contracts/master'),
-            apiFetch('/api/contracts/alerts'),
-            apiFetch('/api/contracts/cpi'),
-            apiFetch('/api/contracts/fee-analysis'),
-            apiFetch('/api/contracts/client-summary'),
-            apiFetch('/api/contracts/biz-line-summary'),
-            apiFetch('/api/contracts/data-quality'),
-        ]);
-        DATA = { master, alerts, cpi, fees, clients, bizline, quality };
-        renderOverview();
-        renderAgreements();
-        renderAlerts();
-        renderFees();
-        renderQuality();
-        document.getElementById('refresh-time').textContent = 'Updated ' + new Date().toLocaleTimeString();
-    } catch (e) {
-        document.getElementById('refresh-time').textContent = 'Error loading data';
-        console.error(e);
-    }
-}
-
-// Tabs
-function switchTab(name) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('tab-' + name).classList.add('active');
-}
-
-// Helpers
-function fmt$(v) {
-    const n = parseFloat(v) || 0;
-    if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
-    return '$' + n.toLocaleString();
-}
-function fmtDate(v) {
-    if (!v || v === 'None' || v === 'null') return '—';
-    const d = new Date(v);
-    return isNaN(d) ? '—' : d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-}
-function statusBadge(s) {
-    if (!s || s === 'None') return '<span class="badge badge-gray">Unknown</span>';
-    const sl = s.toLowerCase();
-    if (sl.includes('current')) return `<span class="badge badge-green">${s}</span>`;
-    if (sl.includes('draft')) return `<span class="badge badge-amber">${s}</span>`;
-    if (sl.includes('superseded')) return `<span class="badge badge-gray">${s}</span>`;
-    if (sl.includes('no agreement')) return `<span class="badge badge-red">${s}</span>`;
-    return `<span class="badge badge-blue">${s}</span>`;
-}
-function alertBadge(t) {
-    if (!t) return '';
-    const tl = t.toLowerCase();
-    if (tl.includes('over-billing') || tl.includes('no agreement')) return `<span class="badge badge-red">${t}</span>`;
-    if (tl.includes('draft') || tl.includes('unknown')) return `<span class="badge badge-amber">${t}</span>`;
-    return `<span class="badge badge-gray">${t}</span>`;
-}
-function countBy(arr, key) {
-    const m = {};
-    arr.forEach(r => { const v = r[key] || 'Not Specified'; m[v] = (m[v]||0) + 1; });
-    return m;
-}
-function sumBy(arr, key) {
-    return arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0);
-}
-function getCol(data, name) {
-    const cols = data.columns || [];
-    const lname = name.toLowerCase();
-    return cols.find(c => c.toLowerCase() === lname) ||
-           cols.find(c => c.toLowerCase().includes(lname)) || name;
-}
-
-// ===== OVERVIEW =====
-let chartInstances = {};
-function destroyChart(id) { if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } }
-
-function renderOverview() {
-    const d = DATA.master.data;
-    const biz = DATA.bizline.data;
-
-    // Find column names
-    const colStatus = getCol(DATA.master, 'status_clean') || getCol(DATA.master, 'status');
-    const colFeeContract = getCol(DATA.fees, 'contract_fee_total');
-    const colQuality = getCol(DATA.quality, 'quality_score');
-
-    const statuses = countBy(d, colStatus);
-    const current = d.filter(r => (r[colStatus]||'').toLowerCase().includes('current')).length;
-    const totalFee = sumBy(DATA.fees.data, colFeeContract);
-    const cpiCount = DATA.cpi.count;
-    const avgQuality = DATA.quality.data.length ?
-        (sumBy(DATA.quality.data, colQuality) / DATA.quality.data.length).toFixed(1) : '—';
-
-    document.getElementById('kpi-row').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">Total Agreements</div><div class="kpi-value">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} status types</div></div>
-        <div class="kpi-card green"><div class="kpi-label">Active / Current</div><div class="kpi-value">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Contract Value</div><div class="kpi-value">${fmt$(totalFee)}</div><div class="kpi-sub">Across all agreements</div></div>
-        <div class="kpi-card amber"><div class="kpi-label">CPI-Linked</div><div class="kpi-value">${cpiCount}</div><div class="kpi-sub">Fee escalation contracts</div></div>
-        <div class="kpi-card"><div class="kpi-label">Avg Quality Score</div><div class="kpi-value">${avgQuality}</div><div class="kpi-sub">Out of 100</div></div>
-    `;
-
-    // Status chart
-    destroyChart('chart-status');
-    const statusLabels = Object.keys(statuses);
-    const statusColors = statusLabels.map(s => {
-        const sl = s.toLowerCase();
-        if (sl.includes('current')) return '#2b6b3e';
-        if (sl.includes('draft')) return '#d97706';
-        if (sl.includes('superseded')) return '#718096';
-        if (sl.includes('no agreement')) return '#c53030';
-        return '#4299e1';
-    });
-    chartInstances['chart-status'] = new Chart(document.getElementById('chart-status'), {
-        type: 'doughnut',
-        data: { labels: statusLabels, datasets: [{ data: Object.values(statuses), backgroundColor: statusColors, borderWidth: 0 }] },
-        options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { family: 'Inter', size: 12 }, padding: 12 } } } }
-    });
-
-    // Biz line chart
-    destroyChart('chart-bizline');
-    const bizLabels = biz.map(r => {
-        const col = getCol(DATA.bizline, 'business_line');
-        let name = r[col] || 'Unknown';
-        return name.length > 30 ? name.substring(0,28) + '...' : name;
-    });
-    const bizFeeCol = getCol(DATA.bizline, 'total_contract_fees');
-    const bizValues = biz.map(r => parseFloat(r[bizFeeCol]) || 0);
-    chartInstances['chart-bizline'] = new Chart(document.getElementById('chart-bizline'), {
-        type: 'bar',
-        data: { labels: bizLabels, datasets: [{ label: 'Contract Fees', data: bizValues, backgroundColor: '#2b6b3e', borderRadius: 4 }] },
-        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
-            scales: { x: { ticks: { callback: v => fmt$(v), font: { family: 'Inter' } } }, y: { ticks: { font: { family: 'Inter', size: 11 } } } } }
-    });
-
-    // Governing law chart
-    destroyChart('chart-govlaw');
-    const colGov = getCol(DATA.master, 'governing_state') || getCol(DATA.master, 'governing_law');
-    const govCounts = countBy(d, colGov);
-    const govSorted = Object.entries(govCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
-    const govColors = ['#2b6b3e','#38855a','#4a9e6e','#5cb882','#6ec896','#80d8aa','#92e8be','#a4f0d0'];
-    chartInstances['chart-govlaw'] = new Chart(document.getElementById('chart-govlaw'), {
-        type: 'bar',
-        data: { labels: govSorted.map(e=>e[0]), datasets: [{ data: govSorted.map(e=>e[1]), backgroundColor: govColors, borderRadius: 4 }] },
-        options: { responsive: true, plugins: { legend: { display: false } },
-            scales: { y: { ticks: { font: { family: 'Inter' } } } } }
-    });
-
-    // CPI by biz line
-    destroyChart('chart-cpi');
-    const bizClientCol = getCol(DATA.bizline, 'cpi_clients');
-    const bizTotalCol = getCol(DATA.bizline, 'total_clients');
-    const cpiVals = biz.map(r => parseFloat(r[bizClientCol]) || 0);
-    const nonCpiVals = biz.map(r => (parseFloat(r[bizTotalCol])||0) - (parseFloat(r[bizClientCol])||0));
-    chartInstances['chart-cpi'] = new Chart(document.getElementById('chart-cpi'), {
-        type: 'bar',
-        data: { labels: bizLabels, datasets: [
-            { label: 'CPI-Linked', data: cpiVals, backgroundColor: '#2b6b3e', borderRadius: 4 },
-            { label: 'No CPI', data: nonCpiVals, backgroundColor: '#e2e8f0', borderRadius: 4 }
-        ]},
-        options: { responsive: true, plugins: { legend: { labels: { font: { family: 'Inter', size: 12 } } } },
-            scales: { x: { stacked: true }, y: { stacked: true } } }
-    });
-}
-
-// ===== AGREEMENTS =====
-function renderAgreements() {
-    const d = DATA.master.data;
-    const colClient = getCol(DATA.master, 'client_legal_name');
-    const colType = getCol(DATA.master, 'agreement_type');
-    const colStatus = getCol(DATA.master, 'status_clean') || getCol(DATA.master, 'status');
-    const colExec = getCol(DATA.master, 'execution_date');
-    const colRenewal = getCol(DATA.master, 'next_renewal_date');
-    const colFee = getCol(DATA.master, 'contract_fee_1');
-    const colGov = getCol(DATA.master, 'governing_state') || getCol(DATA.master, 'governing_law');
-    const colCpi = getCol(DATA.master, 'cpi_flag') || getCol(DATA.master, 'cpi_fee_escalation');
-
-    // Populate filters
-    const statusSet = [...new Set(d.map(r => r[colStatus]).filter(Boolean))].sort();
-    const typeSet = [...new Set(d.map(r => r[colType]).filter(v => v && v !== 'None'))].sort();
-    const statusSel = document.getElementById('filter-status');
-    const typeSel = document.getElementById('filter-type');
-    statusSel.innerHTML = '<option value="">All Statuses</option>' + statusSet.map(s => `<option>${s}</option>`).join('');
-    typeSel.innerHTML = '<option value="">All Agreement Types</option>' + typeSet.map(t => `<option>${t}</option>`).join('');
-
-    function renderRows() {
-        const search = document.getElementById('search-agreements').value.toLowerCase();
-        const fStatus = statusSel.value;
-        const fType = typeSel.value;
-        let filtered = d.filter(r => {
-            if (fStatus && r[colStatus] !== fStatus) return false;
-            if (fType && r[colType] !== fType) return false;
-            if (search) {
-                const hay = [r[colClient], r[colType], r[colStatus], r[colGov]].join(' ').toLowerCase();
-                if (!hay.includes(search)) return false;
-            }
-            return true;
-        });
-        document.getElementById('tbody-agreements').innerHTML = filtered.slice(0, 200).map(r => `<tr>
-            <td><strong>${r[colClient] || '—'}</strong></td>
-            <td>${r[colType] && r[colType] !== 'None' ? r[colType] : '—'}</td>
-            <td>${statusBadge(r[colStatus])}</td>
-            <td>${fmtDate(r[colExec])}</td>
-            <td>${fmtDate(r[colRenewal])}</td>
-            <td>${r[colFee] && r[colFee] !== 'None' ? fmt$(r[colFee]) : '—'}</td>
-            <td>${r[colGov] && r[colGov] !== 'None' ? r[colGov] : '—'}</td>
-            <td>${r[colCpi] && r[colCpi] !== 'None' ? (r[colCpi].toLowerCase().includes('yes') ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>') : '—'}</td>
-        </tr>`).join('');
-    }
-    renderRows();
-    document.getElementById('search-agreements').oninput = renderRows;
-    statusSel.onchange = renderRows;
-    typeSel.onchange = renderRows;
-}
-
-// ===== ALERTS =====
-function renderAlerts() {
-    const d = DATA.alerts.data;
-    const colClient = getCol(DATA.alerts, 'client_legal_name');
-    const colAlert = getCol(DATA.alerts, 'alert_type');
-    const colStatus = getCol(DATA.alerts, 'status_clean') || getCol(DATA.alerts, 'status');
-    const colType = getCol(DATA.alerts, 'agreement_type');
-
-    const alertCounts = countBy(d, colAlert);
-    const sorted = Object.entries(alertCounts).sort((a,b) => b[1]-a[1]);
-
-    document.getElementById('alert-summary').innerHTML = sorted.map(([type, count]) => {
-        const tl = type.toLowerCase();
-        let color = '#718096';
-        if (tl.includes('over-billing') || tl.includes('no agreement')) color = '#c53030';
-        else if (tl.includes('draft') || tl.includes('unknown')) color = '#d97706';
-        return `<div class="alert-stat"><div class="count" style="color:${color}">${count}</div><div class="label">${type}</div></div>`;
-    }).join('');
-
-    const alertSel = document.getElementById('filter-alert-type');
-    alertSel.innerHTML = '<option value="">All Alert Types</option>' + sorted.map(([t]) => `<option>${t}</option>`).join('');
-
-    function renderRows() {
-        const search = document.getElementById('search-alerts').value.toLowerCase();
-        const fType = alertSel.value;
-        let filtered = d.filter(r => {
-            if (fType && r[colAlert] !== fType) return false;
-            if (search) {
-                const hay = [r[colClient], r[colAlert], r[colStatus]].join(' ').toLowerCase();
-                if (!hay.includes(search)) return false;
-            }
-            return true;
-        });
-        document.getElementById('tbody-alerts').innerHTML = filtered.slice(0, 200).map(r => `<tr>
-            <td><strong>${r[colClient] || '—'}</strong></td>
-            <td>${alertBadge(r[colAlert])}</td>
-            <td>${statusBadge(r[colStatus])}</td>
-            <td>${r[colType] && r[colType] !== 'None' ? r[colType] : '—'}</td>
-            <td style="max-width:300px;white-space:normal;font-size:12px;color:#718096;">—</td>
-        </tr>`).join('');
-    }
-    renderRows();
-    document.getElementById('search-alerts').oninput = renderRows;
-    alertSel.onchange = renderRows;
-}
-
-// ===== FEES =====
-function renderFees() {
-    const d = DATA.fees.data;
-    const colClient = getCol(DATA.fees, 'client_legal_name');
-    const colContractFee = getCol(DATA.fees, 'contract_fee_total');
-    const colBillingFee = getCol(DATA.fees, 'billing_fee_total');
-    const colVariance = getCol(DATA.fees, 'fee_variance_total') || getCol(DATA.fees, 'fee_variance');
-    const colFeeStatus = getCol(DATA.fees, 'fee_status');
-
-    const totalContract = sumBy(d, colContractFee);
-    const totalBilling = sumBy(d, colBillingFee);
-    const overBilling = d.filter(r => (r[colFeeStatus]||'').toLowerCase().includes('billing > contract'));
-    const underBilling = d.filter(r => (r[colFeeStatus]||'').toLowerCase().includes('contract > billing'));
-
-    document.getElementById('fee-kpis').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">Total Contract Fees</div><div class="kpi-value">${fmt$(totalContract)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Billing Fees</div><div class="kpi-value">${fmt$(totalBilling)}</div></div>
-        <div class="kpi-card green"><div class="kpi-label">Contract > Billing</div><div class="kpi-value">${underBilling.length}</div><div class="kpi-sub">Under-billed agreements</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Billing > Contract</div><div class="kpi-value">${overBilling.length}</div><div class="kpi-sub">Over-billed agreements</div></div>
-        <div class="kpi-card"><div class="kpi-label">Net Variance</div><div class="kpi-value">${fmt$(totalContract - totalBilling)}</div></div>
-    `;
-
-    // Fee status chart
-    destroyChart('chart-fee-status');
-    const feeCounts = countBy(d, colFeeStatus);
-    chartInstances['chart-fee-status'] = new Chart(document.getElementById('chart-fee-status'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(feeCounts), datasets: [{ data: Object.values(feeCounts), backgroundColor: ['#2b6b3e','#c53030','#718096'], borderWidth: 0 }] },
-        options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { family: 'Inter', size: 12 } } } } }
-    });
-
-    // Variance chart — top 10
-    destroyChart('chart-fee-variance');
-    const withVariance = d.filter(r => Math.abs(parseFloat(r[colVariance])||0) > 0)
-        .sort((a,b) => Math.abs(parseFloat(b[colVariance])||0) - Math.abs(parseFloat(a[colVariance])||0))
-        .slice(0, 10);
-    chartInstances['chart-fee-variance'] = new Chart(document.getElementById('chart-fee-variance'), {
-        type: 'bar',
-        data: {
-            labels: withVariance.map(r => { const n = r[colClient]||''; return n.length > 25 ? n.substring(0,23)+'...' : n; }),
-            datasets: [{ data: withVariance.map(r => parseFloat(r[colVariance])||0),
-                backgroundColor: withVariance.map(r => (parseFloat(r[colVariance])||0) > 0 ? '#c53030' : '#2b6b3e'), borderRadius: 4 }]
-        },
-        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
-            scales: { x: { ticks: { callback: v => fmt$(v), font: { family: 'Inter' } } } } }
-    });
-
-    // Fee table
-    function renderRows() {
-        const search = document.getElementById('search-fees').value.toLowerCase();
-        let filtered = d.filter(r => {
-            if (search) return (r[colClient]||'').toLowerCase().includes(search);
-            return true;
-        });
-        document.getElementById('tbody-fees').innerHTML = filtered.slice(0, 200).map(r => {
-            const v = parseFloat(r[colVariance])||0;
-            return `<tr>
-                <td><strong>${r[colClient] || '—'}</strong></td>
-                <td>${fmt$(r[colContractFee])}</td>
-                <td>${fmt$(r[colBillingFee])}</td>
-                <td style="color:${v > 0 ? '#c53030' : v < 0 ? '#2b6b3e' : '#718096'}">${v !== 0 ? fmt$(v) : '—'}</td>
-                <td>${r[colFeeStatus] || '—'}</td>
-            </tr>`;
+    setContent(`
+        <div class="g5">
+            <div class="card kpi"><div class="kpi-label">Contract Fees</div><div class="kpi-val">${fmt$(tC)}</div></div>
+            <div class="card kpi"><div class="kpi-label">Billing Fees</div><div class="kpi-val">${fmt$(tB)}</div></div>
+            <div class="card kpi green"><div class="kpi-label">Under-Billed</div><div class="kpi-val">${under.length}</div><div class="kpi-sub">Revenue opportunity</div></div>
+            <div class="card kpi red"><div class="kpi-label">Over-Billed</div><div class="kpi-val">${over.length}</div><div class="kpi-sub">Needs review</div></div>
+            <div class="card kpi blue"><div class="kpi-label">Net Variance</div><div class="kpi-val">${fmt$(tC-tB)}</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Fee Status</h3><canvas id="c-fs" height="260"></canvas></div>
+            <div class="card"><h3>Top 10 Variances</h3><canvas id="c-fv" height="260"></canvas></div>
+        </div>
+        <div class="card"><h3>Fee Detail</h3>
+            <div class="toolbar"><input type="text" id="fee-search" placeholder="Search..."></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Contract Fee</th><th>Billing Fee</th><th>Variance</th><th>Status</th></tr></thead><tbody id="fee-tbody"></tbody></table></div>
+        </div>
+    `);
+    function renderFees(){
+        const q=H('fee-search').value.toLowerCase();
+        H('fee-tbody').innerHTML=d.filter(r=>!q||(r[cC]||'').toLowerCase().includes(q)).slice(0,300).map(r=>{
+            const v=$(r[cV]);return`<tr class="${v>0?'row-danger':''}"><td><strong>${r[cC]||'—'}</strong></td><td>${fmt$(r[cCF])}</td><td>${fmt$(r[cBF])}</td><td style="color:${v>0?'#c53030':v<0?'#2b6b3e':'#718096'};font-weight:600">${v?fmt$(v):'—'}</td><td>${r[cFS]||'—'}</td></tr>`;
         }).join('');
     }
-    renderRows();
-    document.getElementById('search-fees').oninput = renderRows;
+    renderFees(); H('fee-search').oninput=renderFees;
+
+    dc('c-fs');const fC=cnt(d,cFS);
+    CI['c-fs']=new Chart(H('c-fs'),{type:'doughnut',data:{labels:Object.keys(fC),datasets:[{data:Object.values(fC),backgroundColor:['#2b6b3e','#c53030','#718096'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+
+    dc('c-fv');
+    const top10=d.filter(r=>Math.abs($(r[cV]))>0).sort((a,b)=>Math.abs($(b[cV]))-Math.abs($(a[cV]))).slice(0,10);
+    CI['c-fv']=new Chart(H('c-fv'),{type:'bar',data:{labels:top10.map(r=>{const n=r[cC]||'';return n.length>22?n.substring(0,20)+'...':n;}),datasets:[{data:top10.map(r=>$(r[cV])),backgroundColor:top10.map(r=>$(r[cV])>0?'#c53030':'#2b6b3e'),borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}}}}});
 }
 
-// ===== DATA QUALITY =====
-function renderQuality() {
-    const d = DATA.quality.data;
-    const colScore = getCol(DATA.quality, 'quality_score');
-    const colTier = getCol(DATA.quality, 'quality_tier');
+// ══════════════════════════════════════════
+// 7. REVENUE OPTIMIZER
+// ══════════════════════════════════════════
+function rRevenue(){
+    const d=DATA.master.data, fd=DATA.fees.data;
+    const cC=gc(DATA.master,'client_legal_name'), cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status');
+    const cFee=gc(DATA.fees,'contract_fee_total'),cBFee=gc(DATA.fees,'billing_fee_total');
+    const cCpi=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
+    const cT=gc(DATA.master,'agreement_type');
 
-    const avgScore = d.length ? (sumBy(d, colScore) / d.length).toFixed(1) : '—';
-    const tiers = countBy(d, colTier);
-    const low = tiers['Low'] || 0;
-    const med = tiers['Medium'] || 0;
-    const high = tiers['High'] || 0;
+    const currentContracts=d.filter(r=>(r[cS]||'').toLowerCase().includes('current'));
+    const noCpi=currentContracts.filter(r=>!r[cCpi]||r[cCpi]==='None'||r[cCpi].toLowerCase().includes('no')||r[cCpi].toLowerCase().includes('not'));
+    const leakage=sum(fd,cFee)-sum(fd,cBFee);
+    const noAgr=d.filter(r=>(r[cS]||'').toLowerCase().includes('no agreement'));
+    const biz=DATA.biz.data, bCol=gc(DATA.biz,'business_line'),bFee=gc(DATA.biz,'total_contract_fees'),bClients=gc(DATA.biz,'total_clients');
 
-    document.getElementById('quality-kpis').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">Total Records</div><div class="kpi-value">${d.length}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Avg Quality Score</div><div class="kpi-value">${avgScore}</div><div class="kpi-sub">Out of 100</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Low Quality</div><div class="kpi-value">${low}</div><div class="kpi-sub">${d.length ? (low/d.length*100).toFixed(0) : 0}% of records</div></div>
-        <div class="kpi-card amber"><div class="kpi-label">Medium Quality</div><div class="kpi-value">${med}</div><div class="kpi-sub">${d.length ? (med/d.length*100).toFixed(0) : 0}% of records</div></div>
-        <div class="kpi-card green"><div class="kpi-label">High Quality</div><div class="kpi-value">${high}</div><div class="kpi-sub">${d.length ? (high/d.length*100).toFixed(0) : 0}% of records</div></div>
-    `;
-
-    // Tier chart
-    destroyChart('chart-quality-tier');
-    chartInstances['chart-quality-tier'] = new Chart(document.getElementById('chart-quality-tier'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(tiers), datasets: [{ data: Object.values(tiers),
-            backgroundColor: Object.keys(tiers).map(t => t === 'Low' ? '#c53030' : t === 'Medium' ? '#d97706' : '#2b6b3e'), borderWidth: 0 }] },
-        options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { family: 'Inter', size: 12 } } } } }
-    });
-
-    // Completeness bars
-    const fields = [
-        {label: 'Client Legal Name', key: 'client_legal_name'},
-        {label: 'Status', key: 'status'},
-        {label: 'Agreement Type', key: 'agreement_type'},
-        {label: 'Execution Date', key: 'execution_date'},
-        {label: 'Governing Law', key: 'governing_state'},
-        {label: 'Billing Frequency', key: 'billing_frequency_method'},
-        {label: 'Pine Contact', key: 'pine_contact'},
-        {label: 'Client Contact', key: 'client_contact'},
-        {label: 'Scope of Services', key: 'scope_of_services_summary'},
-        {label: 'Notice Period', key: 'notice_days'},
+    const recs=[
+        {t:'Add CPI Escalation Clauses',b:`${noCpi.length} current contracts lack CPI escalation. Adding standard CPI language at renewal could protect ${fmt$(sum(noCpi.map(r=>fd.find(f=>f[gc(DATA.fees,'client_legal_name')]===r[cC])||{}).map(r=>r?$(r[cFee]):0),''))} in annual fee revenue from inflation erosion.`,cls:'',impact:'High'},
+        {t:'Close Revenue Leakage',b:`Net under-billing of ${fmt$(leakage)} across the portfolio. Align billing rates to contracted amounts to recover lost revenue.`,cls:leakage>10000?'warn':'',impact:'High'},
+        {t:'Formalize Missing Agreements',b:`${noAgr.length} client relationships have no agreement on file. Formalizing these protects revenue and reduces legal exposure.`,cls:'danger',impact:'Medium'},
+        {t:'Standardize Fee Schedules',b:'Review fee schedules across business lines to ensure consistency and identify underpriced engagements relative to scope of services.',cls:'',impact:'Medium'},
+        {t:'Optimize Billing Frequency',b:'Quarterly or monthly billing improves cash flow vs annual billing. Review billing_frequency_method for optimization opportunities.',cls:'',impact:'Low'},
     ];
-    const masterData = DATA.master.data;
-    const total = masterData.length || 1;
-    document.getElementById('completeness-bars').innerHTML = fields.map(f => {
-        const col = getCol(DATA.master, f.key);
-        const filled = masterData.filter(r => r[col] && r[col] !== 'None' && r[col] !== '' && r[col] !== 'null').length;
-        const pct = (filled / total * 100).toFixed(1);
-        const color = pct >= 80 ? '#2b6b3e' : pct >= 50 ? '#d97706' : '#c53030';
-        return `<div class="quality-bar-wrap">
-            <div class="quality-bar-label"><span>${f.label}</span><span>${pct}%</span></div>
-            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-        </div>`;
-    }).join('');
+
+    setContent(`
+        <div class="g4">
+            <div class="card kpi green"><div class="kpi-label">Current Revenue</div><div class="kpi-val">${fmt$(sum(fd,cFee))}</div><div class="kpi-sub">Active contracts</div></div>
+            <div class="card kpi amber"><div class="kpi-label">Revenue Leakage</div><div class="kpi-val">${fmt$(leakage)}</div><div class="kpi-sub">Under-billing gap</div></div>
+            <div class="card kpi blue"><div class="kpi-label">No CPI Protection</div><div class="kpi-val">${noCpi.length}</div><div class="kpi-sub">Inflation risk</div></div>
+            <div class="card kpi red"><div class="kpi-label">Unformalised</div><div class="kpi-val">${noAgr.length}</div><div class="kpi-sub">No agreement on file</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Revenue by Business Line</h3><canvas id="c-rev-biz" height="280"></canvas></div>
+            <div class="card"><h3>Revenue Per Client by Line</h3><canvas id="c-rev-avg" height="280"></canvas></div>
+        </div>
+        <div class="card"><h3>Revenue Optimization Recommendations</h3>
+            ${recs.map(r=>`<div class="rec-card ${r.cls}"><div class="rec-title">${r.t} <span class="b b-${r.impact==='High'?'red':r.impact==='Medium'?'amber':'blue'}">${r.impact} Impact</span></div><div class="rec-body">${r.b}</div></div>`).join('')}
+        </div>
+    `);
+
+    dc('c-rev-biz');
+    const bL=biz.map(r=>{let n=r[bCol]||'?';return n.length>28?n.substring(0,26)+'...':n;});
+    CI['c-rev-biz']=new Chart(H('c-rev-biz'),{type:'bar',data:{labels:bL,datasets:[{data:biz.map(r=>$(r[bFee])),backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
+
+    dc('c-rev-avg');
+    const avgPerClient=biz.map(r=>{const tc=$(r[bClients]);return tc>0?$(r[bFee])/tc:0;});
+    CI['c-rev-avg']=new Chart(H('c-rev-avg'),{type:'bar',data:{labels:bL,datasets:[{data:avgPerClient,backgroundColor:'#4299e1',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
 }
 
-// Sort
-function sortTable(tableId, colIdx) {
-    const key = tableId + colIdx;
-    sortState[key] = sortState[key] === 'asc' ? 'desc' : 'asc';
-    const tbody = document.getElementById('tbody-' + tableId);
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    rows.sort((a, b) => {
-        const aVal = a.cells[colIdx]?.textContent || '';
-        const bVal = b.cells[colIdx]?.textContent || '';
-        const aNum = parseFloat(aVal.replace(/[$,]/g, ''));
-        const bNum = parseFloat(bVal.replace(/[$,]/g, ''));
-        if (!isNaN(aNum) && !isNaN(bNum)) return sortState[key] === 'asc' ? aNum - bNum : bNum - aNum;
-        return sortState[key] === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-    });
-    rows.forEach(r => tbody.appendChild(r));
+// ══════════════════════════════════════════
+// 8. DOCUMENTS (SharePoint Links)
+// ══════════════════════════════════════════
+function rDocuments(){
+    const d=DATA.master.data;
+    const cC=gc(DATA.master,'client_legal_name'),cP=gc(DATA.master,'parent_entity');
+    const cSP=gc(DATA.master,'sharepoint_path')||gc(DATA.master,'new_file_path');
+    const cOrig=gc(DATA.master,'original_source_paths');
+    const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'),cT=gc(DATA.master,'agreement_type');
+    const cExec=gc(DATA.master,'execution_date');
+
+    const withLink=d.filter(r=>r[cSP]&&r[cSP]!=='None'&&r[cSP]!=='');
+    const noLink=d.length-withLink.length;
+
+    setContent(`
+        <div class="g3">
+            <div class="card kpi green"><div class="kpi-label">Documents Linked</div><div class="kpi-val">${withLink.length}</div><div class="kpi-sub">SharePoint paths available</div></div>
+            <div class="card kpi red"><div class="kpi-label">Missing Documents</div><div class="kpi-val">${noLink}</div><div class="kpi-sub">No file path on record</div></div>
+            <div class="card kpi"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div></div>
+        </div>
+        <div class="card"><h3>Agreement Document Vault</h3>
+            <div class="toolbar">
+                <input type="text" id="doc-search" placeholder="Search by client or parent...">
+                <select id="doc-filter"><option value="">All</option><option value="linked">Has Document</option><option value="missing">Missing Document</option></select>
+            </div>
+            <div class="tbl-wrap"><table><thead><tr><th>Parent</th><th>Client</th><th>Agreement Type</th><th>Status</th><th>Executed</th><th>Document</th></tr></thead><tbody id="doc-tbody"></tbody></table></div>
+        </div>
+    `);
+    function renderDocs(){
+        const q=H('doc-search').value.toLowerCase(),f=H('doc-filter').value;
+        const filtered=d.filter(r=>{
+            if(f==='linked'&&(!r[cSP]||r[cSP]==='None'))return false;
+            if(f==='missing'&&r[cSP]&&r[cSP]!=='None')return false;
+            if(q)return(r[cC]+''+r[cP]).toLowerCase().includes(q);
+            return true;
+        });
+        H('doc-tbody').innerHTML=filtered.slice(0,300).map(r=>{
+            const hasDoc=r[cSP]&&r[cSP]!=='None';
+            return `<tr><td>${r[cP]&&r[cP]!=='None'?r[cP]:'—'}</td><td><strong>${r[cC]}</strong></td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td><td>${bStat(r[cS])}</td><td>${fD(r[cExec])}</td><td>${hasDoc?`<a href="${r[cSP]}" target="_blank" class="sp-link">&#128196; Open in SharePoint</a>`:'<span style="color:#c53030;font-size:11px;">No document</span>'}</td></tr>`;
+        }).join('');
+    }
+    renderDocs(); H('doc-search').oninput=renderDocs; H('doc-filter').onchange=renderDocs;
+}
+
+// ══════════════════════════════════════════
+// 9. DATA QUALITY
+// ══════════════════════════════════════════
+function rQuality(){
+    const d=DATA.quality.data;
+    const cQ=gc(DATA.quality,'quality_score'),cTier=gc(DATA.quality,'quality_tier');
+    const avg=d.length?(sum(d,cQ)/d.length).toFixed(1):'—';
+    const tiers=cnt(d,cTier);
+    const fields=[
+        {l:'Client Legal Name',k:'client_legal_name'},{l:'Status',k:'status'},{l:'Agreement Type',k:'agreement_type'},
+        {l:'Execution Date',k:'execution_date'},{l:'Governing Law',k:'governing_state'},{l:'Billing Frequency',k:'billing_frequency_method'},
+        {l:'Pine Contact',k:'pine_contact'},{l:'Client Contact',k:'client_contact'},{l:'Scope of Services',k:'scope_of_services_summary'},
+        {l:'Notice Period',k:'notice_days'},{l:'Contract Fee',k:'contract_fee_1'},{l:'CPI Escalation',k:'cpi_fee_escalation'},
+    ];
+    const md=DATA.master.data,total=md.length||1;
+
+    setContent(`
+        <div class="g5">
+            <div class="card kpi"><div class="kpi-label">Records</div><div class="kpi-val">${d.length}</div></div>
+            <div class="card kpi"><div class="kpi-label">Avg Score</div><div class="kpi-val">${avg}</div><div class="kpi-sub">/100</div></div>
+            <div class="card kpi red"><div class="kpi-label">Low</div><div class="kpi-val">${tiers['Low']||0}</div><div class="kpi-sub">${d.length?((tiers['Low']||0)/d.length*100).toFixed(0):0}%</div></div>
+            <div class="card kpi amber"><div class="kpi-label">Medium</div><div class="kpi-val">${tiers['Medium']||0}</div><div class="kpi-sub">${d.length?((tiers['Medium']||0)/d.length*100).toFixed(0):0}%</div></div>
+            <div class="card kpi green"><div class="kpi-label">High</div><div class="kpi-val">${tiers['High']||0}</div><div class="kpi-sub">${d.length?((tiers['High']||0)/d.length*100).toFixed(0):0}%</div></div>
+        </div>
+        <div class="g2">
+            <div class="card"><h3>Quality Distribution</h3><canvas id="c-qt" height="260"></canvas></div>
+            <div class="card"><h3>Field Completeness</h3><div id="qbars">${fields.map(f=>{
+                const col=gc(DATA.master,f.k);
+                const filled=md.filter(r=>r[col]&&r[col]!=='None'&&r[col]!==''&&r[col]!=='null').length;
+                const pct=(filled/total*100).toFixed(1);
+                const c=pct>=80?'#2b6b3e':pct>=50?'#d97706':'#c53030';
+                return `<div class="qbar"><div class="qbar-top"><span>${f.l}</span><span>${pct}%</span></div><div class="qbar-bg"><div class="qbar-fill" style="width:${pct}%;background:${c}"></div></div></div>`;
+            }).join('')}</div></div>
+        </div>
+        <div class="card"><h3>Score Distribution</h3><canvas id="c-qhist" height="200"></canvas></div>
+    `);
+
+    dc('c-qt');
+    CI['c-qt']=new Chart(H('c-qt'),{type:'doughnut',data:{labels:Object.keys(tiers),datasets:[{data:Object.values(tiers),backgroundColor:Object.keys(tiers).map(t=>t==='Low'?'#c53030':t==='Medium'?'#d97706':'#2b6b3e'),borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:12}}}}}});
+
+    dc('c-qhist');
+    const buckets={'0-20':0,'21-40':0,'41-60':0,'61-80':0,'81-100':0};
+    d.forEach(r=>{const s=$(r[cQ]);if(s<=20)buckets['0-20']++;else if(s<=40)buckets['21-40']++;else if(s<=60)buckets['41-60']++;else if(s<=80)buckets['61-80']++;else buckets['81-100']++;});
+    CI['c-qhist']=new Chart(H('c-qhist'),{type:'bar',data:{labels:Object.keys(buckets),datasets:[{data:Object.values(buckets),backgroundColor:['#c53030','#e53e3e','#d97706','#38a169','#2b6b3e'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
 }
 </script>
 </body>
