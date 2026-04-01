@@ -7,11 +7,11 @@ from msal import ConfidentialClientApplication
 
 app = FastAPI(title="Pine Fabric Connector")
 
-FABRIC_SQL_SERVER = os.environ["FABRIC_SQL_SERVER"]
-FABRIC_DATABASE = os.environ["FABRIC_DATABASE"]
-AZURE_TENANT_ID = os.environ["AZURE_TENANT_ID"]
-AZURE_CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
-AZURE_CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]
+FABRIC_SQL_SERVER = os.environ.get("FABRIC_SQL_SERVER", "")
+FABRIC_DATABASE = os.environ.get("FABRIC_DATABASE", "")
+AZURE_TENANT_ID = os.environ.get("AZURE_TENANT_ID", "")
+AZURE_CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
+AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
 
 SCOPES = ["https://database.windows.net/.default"]
 SQL_COPT_SS_ACCESS_TOKEN = 1256
@@ -44,7 +44,8 @@ def _get_connection() -> pyodbc.Connection:
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    configured = all([FABRIC_SQL_SERVER, FABRIC_DATABASE, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET])
+    return {"status": "ok", "configured": configured}
 
 
 @app.get("/api/tables")
