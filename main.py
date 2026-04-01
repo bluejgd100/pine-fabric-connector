@@ -115,6 +115,12 @@ def root():
     return FileResponse("frontend/index.html")
 
 
+@app.get("/debug/users")
+def debug_users():
+    users = _get_users()
+    return {u: {"role": d["role"], "pass_len": len(d["password"])} for u, d in users.items()}
+
+
 @app.get("/health")
 def health():
     cfg = _get_config()

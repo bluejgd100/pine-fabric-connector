@@ -76,6 +76,8 @@ a:hover { text-decoration: underline; }
 .kpi.red .kpi-val { color: #c53030; }
 .kpi.amber .kpi-val { color: #d97706; }
 .kpi.blue .kpi-val { color: #2b6cb0; }
+.clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
 /* Tables */
 .tbl-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; }
@@ -104,26 +106,26 @@ tbody tr.row-warn { background: #fffff0; }
 
 /* Tree */
 .tree { font-size: 13px; }
-.tree-parent { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; background: #fff; overflow: hidden; }
-.tree-parent-header { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; gap: 10px; font-weight: 600; transition: background 0.15s; }
+.tree-parent { border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 4px; background: #fff; overflow: hidden; }
+.tree-parent-header { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; gap: 8px; font-weight: 600; font-size: 13px; transition: background 0.15s; }
 .tree-parent-header:hover { background: #f7fafc; }
-.tree-parent-header .arrow { transition: transform 0.2s; font-size: 12px; color: #718096; }
+.tree-parent-header .arrow { transition: transform 0.2s; font-size: 11px; color: #718096; }
 .tree-parent-header .arrow.open { transform: rotate(90deg); }
-.tree-parent-header .stats { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 400; color: #718096; }
+.tree-parent-header .stats { margin-left: auto; display: flex; gap: 8px; font-size: 10px; font-weight: 400; color: #718096; align-items: center; }
 .tree-children { display: none; border-top: 1px solid #f0f4f8; }
 .tree-children.open { display: block; }
 .tree-client { border-bottom: 1px solid #f0f4f8; }
-.tree-client-header { display: flex; align-items: center; padding: 10px 16px 10px 36px; cursor: pointer; gap: 8px; font-weight: 500; font-size: 12px; }
+.tree-client-header { display: flex; align-items: center; padding: 6px 12px 6px 28px; cursor: pointer; gap: 6px; font-weight: 500; font-size: 12px; }
 .tree-client-header:hover { background: #f7fafc; }
 .tree-client-header .arrow { font-size: 10px; color: #a0aec0; transition: transform 0.2s; }
 .tree-client-header .arrow.open { transform: rotate(90deg); }
-.tree-client-header .stats { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 400; color: #a0aec0; }
+.tree-client-header .stats { margin-left: auto; display: flex; gap: 8px; font-size: 10px; font-weight: 400; color: #a0aec0; align-items: center; }
 .tree-agreements { display: none; background: #fafcfe; }
 .tree-agreements.open { display: block; }
-.tree-agreement { padding: 8px 16px 8px 56px; border-bottom: 1px solid #f0f4f8; font-size: 12px; display: flex; align-items: center; gap: 10px; }
+.tree-agreement { padding: 5px 12px 5px 44px; border-bottom: 1px solid #f0f4f8; font-size: 11px; display: flex; align-items: center; gap: 8px; }
 .tree-agreement:hover { background: #f0f4f8; }
 .tree-agreement .agr-name { font-weight: 500; flex: 1; }
-.tree-agreement .agr-meta { display: flex; gap: 14px; color: #718096; font-size: 11px; }
+.tree-agreement .agr-meta { display: flex; gap: 10px; color: #718096; font-size: 10px; align-items: center; }
 
 /* Timeline */
 .timeline { position: relative; padding-left: 24px; }
@@ -318,12 +320,12 @@ function rOverview(){
 
     setContent(`
         <div class="g6">
-            <div class="card kpi"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses</div></div>
-            <div class="card kpi green"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio</div></div>
-            <div class="card kpi blue"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">All agreements</div></div>
-            <div class="card kpi amber"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation</div></div>
-            <div class="card kpi red"><div class="kpi-label">Renew in 90d</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Action needed</div></div>
-            <div class="card kpi"><div class="kpi-label">Avg Quality</div><div class="kpi-val">${avgQ}</div><div class="kpi-sub">Out of 100</div></div>
+            <div class="card kpi clickable" onclick="go('portfolio')"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses &#8594;</div></div>
+            <div class="card kpi green clickable" onclick="go('portfolio')"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio &#8594;</div></div>
+            <div class="card kpi blue clickable" onclick="go('fees')"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">All agreements &#8594;</div></div>
+            <div class="card kpi amber clickable" onclick="go('escalators')"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation &#8594;</div></div>
+            <div class="card kpi red clickable" onclick="go('renewals')"><div class="kpi-label">Renew in 90d</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Action needed &#8594;</div></div>
+            <div class="card kpi clickable" onclick="go('quality')"><div class="kpi-label">Avg Quality</div><div class="kpi-val">${avgQ}</div><div class="kpi-sub">Out of 100 &#8594;</div></div>
         </div>
         <div class="g2">
             <div class="card"><h3>Status Distribution</h3><canvas id="c-status" height="260"></canvas></div>
@@ -395,25 +397,32 @@ function rPortfolio(){
         tree[parent].totalFee+=$(r[cFee]);
     });
 
-    const parentsSorted=Object.entries(tree).sort((a,b)=>b[1].count-a[1].count);
+    const parentsSorted=Object.entries(tree).sort((a,b)=>a[0].localeCompare(b[0]));
 
     setContent(`
         <div class="toolbar"><input type="text" id="tree-search" placeholder="Search parent companies, clients, or agreements..."></div>
-        <div class="card" style="padding:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:8px;">
-                <span style="font-size:12px;color:#718096;">${parentsSorted.length} parent entities &middot; ${d.length} agreements</span>
-                <button class="btn btn-secondary" onclick="toggleAllTree()">Expand All</button>
+        <div class="card" style="padding:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 12px 8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;">
+                <span style="font-size:12px;color:#718096;font-weight:600;">${parentsSorted.length} parent entities &middot; ${d.length} agreements</span>
+                <button class="btn btn-secondary" onclick="toggleAllTree()">Expand / Collapse All</button>
             </div>
             <div id="tree-container" class="tree">${parentsSorted.map(([pName,pData],pi)=>{
-                const clientEntries=Object.entries(pData.clients).sort((a,b)=>b[1].length-a[1].length);
+                const clientEntries=Object.entries(pData.clients).sort((a,b)=>a[0].localeCompare(b[0]));
+                const allAgrs=[].concat(...Object.values(pData.clients));
+                const cpiCount=allAgrs.filter(r=>r[cCpi]&&r[cCpi].toLowerCase().includes('yes')).length;
+                const currentCount=allAgrs.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
+                const bizLines=[...new Set(allAgrs.map(r=>r[gc(DATA.master,'business_line_1')]).filter(v=>v&&v!=='None'))];
                 return `<div class="tree-parent" data-search="${pName.toLowerCase()}">
                     <div class="tree-parent-header" onclick="toggleParent(${pi})">
                         <span class="arrow" id="pa-${pi}">&#9654;</span>
                         <strong>${pName}</strong>
                         <div class="stats">
                             <span>${clientEntries.length} client${clientEntries.length>1?'s':''}</span>
-                            <span>${pData.count} agreement${pData.count>1?'s':''}</span>
+                            <span>${pData.count} agmt${pData.count>1?'s':''}</span>
+                            <span class="b b-green" style="font-size:9px">${currentCount} active</span>
+                            ${cpiCount?`<span class="b b-amber" style="font-size:9px">${cpiCount} CPI</span>`:''}
                             <span>${fmt$(pData.totalFee)}</span>
+                            ${bizLines.length?`<span style="font-size:9px;color:#a0aec0">${bizLines.slice(0,2).join(', ')}</span>`:''}
                         </div>
                     </div>
                     <div class="tree-children" id="pc-${pi}">${clientEntries.map(([cName,agrs],ci)=>{
@@ -460,43 +469,70 @@ function rRenewals(){
     const cC=gc(DATA.master,'client_legal_name'), cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status');
     const cRen=gc(DATA.master,'next_renewal_date'), cTerm=gc(DATA.master,'term_expiration'), cAuto=gc(DATA.master,'auto_renewal_flag')||gc(DATA.master,'autorenewal_yesno_terms');
     const cFee=gc(DATA.master,'contract_fee_1'), cT=gc(DATA.master,'agreement_type');
+    const cCpi=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
 
     const withDates=d.map(r=>{
         const renDays=daysUntil(r[cRen]), termDays=daysUntil(r[cTerm]);
         const days=renDays!==null?renDays:(termDays!==null?termDays:null);
         const dateVal=r[cRen]&&r[cRen]!=='None'?r[cRen]:r[cTerm];
-        return {...r,_days:days,_dateVal:dateVal,_type:renDays!==null?'Renewal':'Expiration'};
+        const hasCpi=r[cCpi]&&r[cCpi].toLowerCase().includes('yes');
+        return {...r,_days:days,_dateVal:dateVal,_type:renDays!==null?'Renewal':'Expiration',_cpi:hasCpi};
     }).filter(r=>r._days!==null&&r._days>=-30).sort((a,b)=>a._days-b._days);
 
     const urgent=withDates.filter(r=>r._days>=0&&r._days<=30).length;
     const soon=withDates.filter(r=>r._days>30&&r._days<=90).length;
     const upcoming=withDates.filter(r=>r._days>90&&r._days<=180).length;
     const later=withDates.filter(r=>r._days>180).length;
+    const cpiRenewals=withDates.filter(r=>r._cpi).length;
 
     setContent(`
-        <div class="g4">
+        <div class="g5">
             <div class="card kpi red"><div class="kpi-label">Within 30 Days</div><div class="kpi-val">${urgent}</div><div class="kpi-sub">Immediate action</div></div>
             <div class="card kpi amber"><div class="kpi-label">30 – 90 Days</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Plan review</div></div>
             <div class="card kpi blue"><div class="kpi-label">90 – 180 Days</div><div class="kpi-val">${upcoming}</div><div class="kpi-sub">On the horizon</div></div>
             <div class="card kpi green"><div class="kpi-label">180+ Days</div><div class="kpi-val">${later}</div><div class="kpi-sub">No rush</div></div>
+            <div class="card kpi amber"><div class="kpi-label">CPI Renewals</div><div class="kpi-val">${cpiRenewals}</div><div class="kpi-sub">With escalation</div></div>
         </div>
         <div class="g2">
             <div class="card"><h3>Renewal Timeline</h3><canvas id="c-ren-timeline" height="280"></canvas></div>
             <div class="card"><h3>Upcoming Actions</h3>
                 <div class="timeline" id="renewal-timeline">${withDates.slice(0,15).map(r=>{
                     const cls=r._days<=30?'urgent':r._days<=90?'soon':'';
-                    return `<div class="tl-item ${cls}"><div class="tl-date">${fD(r._dateVal)} (${r._days}d)</div><div class="tl-title">${r[cC]}</div><div class="tl-sub">${r._type} &middot; ${r[cT]&&r[cT]!=='None'?r[cT]:''} &middot; ${fmt$(r[cFee])}</div></div>`;
+                    return `<div class="tl-item ${cls}"><div class="tl-date">${fD(r._dateVal)} (${r._days}d) ${r._cpi?'<span class="b b-amber" style="font-size:9px">CPI</span>':''}</div><div class="tl-title">${r[cC]}</div><div class="tl-sub">${r._type} &middot; ${r[cT]&&r[cT]!=='None'?r[cT]:''} &middot; ${fmt$(r[cFee])}</div></div>`;
                 }).join('')}</div>
             </div>
         </div>
         <div class="card"><h3>All Renewals & Expirations</h3>
-            <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Days Out</th><th>Event</th><th>Auto-Renew</th><th>Fee</th><th>Status</th></tr></thead>
-            <tbody>${withDates.map(r=>{
-                const cls=r._days<=30?'row-danger':r._days<=90?'row-warn':'';
-                return `<tr class="${cls}"><td><strong>${r[cC]}</strong></td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td><td>${fD(r._dateVal)}</td><td><strong>${r._days}d</strong></td><td>${r._type}</td><td>${r[cAuto]&&r[cAuto]!=='None'?r[cAuto]:'—'}</td><td>${fmt$(r[cFee])}</td><td>${bStat(r[cS])}</td></tr>`;
-            }).join('')}</tbody></table></div>
+            <div class="toolbar">
+                <input type="text" id="ren-search" placeholder="Search client...">
+                <select id="ren-cpi-filter"><option value="">All Contracts</option><option value="cpi">CPI Only</option><option value="nocpi">Non-CPI Only</option></select>
+                <select id="ren-time-filter"><option value="">All Time Periods</option><option value="30">Within 30 Days</option><option value="90">Within 90 Days</option><option value="180">Within 180 Days</option></select>
+            </div>
+            <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Days Out</th><th>Event</th><th>CPI</th><th>Auto-Renew</th><th>Fee</th><th>Status</th></tr></thead>
+            <tbody id="ren-tbody"></tbody></table></div>
         </div>
     `);
+
+    function renderRenewals(){
+        const q=H('ren-search').value.toLowerCase();
+        const cpiFilt=H('ren-cpi-filter').value;
+        const timeFilt=H('ren-time-filter').value;
+        const filtered=withDates.filter(r=>{
+            if(q&&!(r[cC]||'').toLowerCase().includes(q))return false;
+            if(cpiFilt==='cpi'&&!r._cpi)return false;
+            if(cpiFilt==='nocpi'&&r._cpi)return false;
+            if(timeFilt&&r._days>parseInt(timeFilt))return false;
+            return true;
+        });
+        H('ren-tbody').innerHTML=filtered.map(r=>{
+            const cls=r._days<=30?'row-danger':r._days<=90?'row-warn':'';
+            return `<tr class="${cls}"><td><strong>${r[cC]}</strong></td><td>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</td><td>${fD(r._dateVal)}</td><td><strong>${r._days}d</strong></td><td>${r._type}</td><td>${r._cpi?'<span class="b b-green">Yes</span>':'<span class="b b-gray">No</span>'}</td><td>${r[cAuto]&&r[cAuto]!=='None'?r[cAuto]:'—'}</td><td>${fmt$(r[cFee])}</td><td>${bStat(r[cS])}</td></tr>`;
+        }).join('');
+    }
+    renderRenewals();
+    H('ren-search').oninput=renderRenewals;
+    H('ren-cpi-filter').onchange=renderRenewals;
+    H('ren-time-filter').onchange=renderRenewals;
 
     // Timeline chart
     dc('c-ren-timeline');
@@ -521,10 +557,10 @@ function rEscalators(){
 
     setContent(`
         <div class="g4">
-            <div class="card kpi green"><div class="kpi-label">CPI-Linked Contracts</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${DATA.master.data.length?((d.length/DATA.master.data.length)*100).toFixed(0):'0'}% of portfolio</div></div>
-            <div class="card kpi blue"><div class="kpi-label">CPI Contract Value</div><div class="kpi-val">${fmt$(totalCpiFee)}</div><div class="kpi-sub">Subject to escalation</div></div>
-            <div class="card kpi amber"><div class="kpi-label">Business Lines</div><div class="kpi-val">${Object.keys(bizBreak).length}</div><div class="kpi-sub">With CPI clauses</div></div>
-            <div class="card kpi"><div class="kpi-label">Avg Fee (CPI)</div><div class="kpi-val">${d.length?fmt$(totalCpiFee/d.length):'—'}</div><div class="kpi-sub">Per contract</div></div>
+            <div class="card kpi green clickable" onclick="go('renewals')"><div class="kpi-label">CPI-Linked Contracts</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${DATA.master.data.length?((d.length/DATA.master.data.length)*100).toFixed(0):'0'}% of portfolio &#8594;</div></div>
+            <div class="card kpi blue clickable" onclick="go('fees')"><div class="kpi-label">CPI Contract Value</div><div class="kpi-val">${fmt$(totalCpiFee)}</div><div class="kpi-sub">Subject to escalation &#8594;</div></div>
+            <div class="card kpi amber clickable" onclick="go('revenue')"><div class="kpi-label">Business Lines</div><div class="kpi-val">${Object.keys(bizBreak).length}</div><div class="kpi-sub">With CPI clauses &#8594;</div></div>
+            <div class="card kpi clickable" onclick="go('portfolio')"><div class="kpi-label">Avg Fee (CPI)</div><div class="kpi-val">${d.length?fmt$(totalCpiFee/d.length):'—'}</div><div class="kpi-sub">Per contract &#8594;</div></div>
         </div>
         <div class="g2">
             <div class="card"><h3>CPI Contracts by Business Line</h3><canvas id="c-esc-biz" height="260"></canvas></div>
