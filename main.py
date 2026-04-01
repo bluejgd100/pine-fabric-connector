@@ -1,11 +1,21 @@
 import os
+import secrets
 import struct
 
 import pyodbc
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi.security import APIKeyHeader
 from msal import ConfidentialClientApplication
 
 app = FastAPI(title="Pine Fabric Connector")
+
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def _verify_api_key(api_key: str = Security(API_KEY_HEADER)):
+    expected = os.environ.get("API_KEY", "")
+    if not expected or not api_key or not secrets.compare_digest(api_key, expected):
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 SCOPES = ["https://database.windows.net/.default"]
 SQL_COPT_SS_ACCESS_TOKEN = 1256
@@ -56,7 +66,7 @@ def health():
     return {"status": "ok", "configured": configured, "missing": env_keys}
 
 
-@app.get("/api/tables")
+@app.get("/api/tables", dependencies=[Depends(_verify_api_key)])
 def list_tables():
     try:
         conn = _get_connection()
@@ -85,36 +95,36 @@ def _query_table(table: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/contracts/master")
+@app.get("/api/contracts/master", dependencies=[Depends(_verify_api_key)])
 def contracts_master():
     return _query_table("contracts_master")
 
 
-@app.get("/api/contracts/alerts")
+@app.get("/api/contracts/alerts", dependencies=[Depends(_verify_api_key)])
 def contracts_alerts():
     return _query_table("contracts_alerts")
 
 
-@app.get("/api/contracts/cpi")
+@app.get("/api/contracts/cpi", dependencies=[Depends(_verify_api_key)])
 def contracts_cpi():
     return _query_table("contracts_cpi")
 
 
-@app.get("/api/contracts/fee-analysis")
+@app.get("/api/contracts/fee-analysis", dependencies=[Depends(_verify_api_key)])
 def contracts_fee_analysis():
     return _query_table("contracts_fee_analysis")
 
 
-@app.get("/api/contracts/client-summary")
+@app.get("/api/contracts/client-summary", dependencies=[Depends(_verify_api_key)])
 def contracts_client_summary():
     return _query_table("contracts_client_summary")
 
 
-@app.get("/api/contracts/biz-line-summary")
+@app.get("/api/contracts/biz-line-summary", dependencies=[Depends(_verify_api_key)])
 def contracts_biz_line_summary():
     return _query_table("contracts_biz_line_summary")
 
 
-@app.get("/api/contracts/data-quality")
+@app.get("/api/contracts/data-quality", dependencies=[Depends(_verify_api_key)])
 def contracts_data_quality():
     return _query_table("contracts_data_quality")
