@@ -415,6 +415,8 @@ function rPortfolio(){
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 12px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:2px;">
                 <span style="font-size:12px;color:#718096;font-weight:600;" id="tree-count"></span>
                 <button class="btn btn-secondary" onclick="toggleAllTree()">Expand / Collapse All</button>
+                <button class="btn btn-primary" onclick="exportPortfolio('summary')">&#8595; Export Summary</button>
+                <button class="btn btn-primary" onclick="exportPortfolio('detail')">&#8595; Export with Agreements</button>
             </div>
             <div id="tree-container" class="tree"></div>
         </div>
@@ -484,14 +486,13 @@ function rPortfolio(){
                         </div>
                         <div class="tree-agreements ${autoExpand?'open':''}" id="cc-${cid}">${agrs.map(r=>`
                             <div class="tree-agreement">
-                                <span class="agr-name">${r[cN]||r[cT]||'Agreement'}</span>
+                                <span class="agr-name">${r[cSP]&&r[cSP]!=='None'?`<a href="${r[cSP]}" target="_blank" class="sp-link" title="Open in SharePoint">&#128196; ${r[cN]||r[cT]||'Agreement'}</a>`:(r[cN]||r[cT]||'Agreement')}</span>
                                 <div class="agr-meta">
                                     ${bStat(r[cS])}
                                     <span>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</span>
                                     <span>${fD(r[cExec])}</span>
                                     <span>${r[cFee]&&r[cFee]!=='None'?fmt$(r[cFee]):'—'}</span>
                                     ${r[cCpi]&&r[cCpi].toLowerCase().includes('yes')?'<span class="b b-green">CPI</span>':''}
-                                    ${r[cSP]&&r[cSP]!=='None'?`<a href="${r[cSP]}" target="_blank" class="sp-link">&#128196; Open</a>`:''}
                                 </div>
                             </div>
                         `).join('')}</div>
@@ -508,6 +509,74 @@ function rPortfolio(){
     H('pf-biz').onchange=buildTree;
     H('pf-gov').onchange=buildTree;
 }
+function exportPortfolio(mode){
+    const d=DATA.master.data;
+    const cP=gc(DATA.master,'parent_entity'), cC=gc(DATA.master,'client_legal_name'), cN=gc(DATA.master,'contract_name');
+    const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'), cT=gc(DATA.master,'agreement_type');
+    const cFee=gc(DATA.master,'contract_fee_1'), cCpi=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
+    const cExec=gc(DATA.master,'execution_date'), cSP=gc(DATA.master,'sharepoint_path')||gc(DATA.master,'new_file_path');
+    const cBiz=gc(DATA.master,'business_line_1'), cGov=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
+    const cRen=gc(DATA.master,'next_renewal_date');
+
+    // Apply current filters
+    const q=(H('tree-search')?H('tree-search').value:'').toLowerCase();
+    const fStatus=H('pf-status')?H('pf-status').value:'';
+    const fCpi=H('pf-cpi')?H('pf-cpi').value:'';
+    const fType=H('pf-type')?H('pf-type').value:'';
+    const fBiz=H('pf-biz')?H('pf-biz').value:'';
+    const fGov=H('pf-gov')?H('pf-gov').value:'';
+
+    const filtered=d.filter(r=>{
+        if(q){const hay=(r[cP]+''+r[cC]+''+r[cN]+''+r[cT]).toLowerCase();if(!hay.includes(q))return false;}
+        if(fStatus&&r[cS]!==fStatus)return false;
+        if(fCpi==='yes'&&!(r[cCpi]&&r[cCpi].toLowerCase().includes('yes')))return false;
+        if(fCpi==='no'&&r[cCpi]&&r[cCpi].toLowerCase().includes('yes'))return false;
+        if(fType&&r[cT]!==fType)return false;
+        if(fBiz&&r[cBiz]!==fBiz)return false;
+        if(fGov&&r[cGov]!==fGov)return false;
+        return true;
+    });
+
+    let csv='';
+    if(mode==='summary'){
+        // Parent-level summary
+        const tree={};
+        filtered.forEach(r=>{
+            const p=r[cP]||r[cC]||'Unknown';
+            if(!tree[p])tree[p]={clients:new Set(),count:0,fee:0,cpi:0,current:0};
+            tree[p].clients.add(r[cC]||'');
+            tree[p].count++;
+            tree[p].fee+=$(r[cFee]);
+            if(r[cCpi]&&r[cCpi].toLowerCase().includes('yes'))tree[p].cpi++;
+            if((r[cS]||'').toLowerCase().includes('current'))tree[p].current++;
+        });
+        csv='Parent Entity,Clients,Agreements,Active,CPI Linked,Total Fees\n';
+        Object.entries(tree).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([p,v])=>{
+            csv+=`"${p}",${v.clients.size},${v.count},${v.current},${v.cpi},"${$(v.fee).toFixed(2)}"\n`;
+        });
+    } else {
+        // Full detail
+        csv='Parent Entity,Client,Contract Name,Agreement Type,Status,Business Line,Execution Date,Renewal Date,Contract Fee,CPI,Governing Law,SharePoint Link\n';
+        filtered.forEach(r=>{
+            const vals=[
+                r[cP]||'',r[cC]||'',r[cN]||'',r[cT]||'',r[cS]||'',r[cBiz]||'',
+                r[cExec]||'',r[cRen]||'',$(r[cFee]).toFixed(2),
+                r[cCpi]&&r[cCpi].toLowerCase().includes('yes')?'Yes':'No',
+                r[cGov]||'',r[cSP]||''
+            ].map(v=>v==='None'?'':v);
+            csv+=vals.map(v=>`"${(v+'').replace(/"/g,'""')}"`).join(',')+'\n';
+        });
+    }
+
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`PINE_Portfolio_${mode}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 function toggleParent(i){const c=H('pc-'+i),a=H('pa-'+i);c.classList.toggle('open');a.classList.toggle('open');}
 function toggleClient(id){const c=H('cc-'+id),a=H('ca-'+id);c.classList.toggle('open');a.classList.toggle('open');}
 function toggleAllTree(){document.querySelectorAll('.tree-children,.tree-agreements').forEach(e=>e.classList.toggle('open'));document.querySelectorAll('.arrow').forEach(a=>a.classList.toggle('open'));}
