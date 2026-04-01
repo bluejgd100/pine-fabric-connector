@@ -7,21 +7,26 @@ from msal import ConfidentialClientApplication
 
 app = FastAPI(title="Pine Fabric Connector")
 
-FABRIC_SQL_SERVER = os.environ.get("FABRIC_SQL_SERVER", "")
-FABRIC_DATABASE = os.environ.get("FABRIC_DATABASE", "")
-AZURE_TENANT_ID = os.environ.get("AZURE_TENANT_ID", "")
-AZURE_CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
-AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
-
 SCOPES = ["https://database.windows.net/.default"]
 SQL_COPT_SS_ACCESS_TOKEN = 1256
 
 
+def _get_config():
+    return {
+        "server": os.environ.get("FABRIC_SQL_SERVER", ""),
+        "database": os.environ.get("FABRIC_DATABASE", ""),
+        "tenant_id": os.environ.get("AZURE_TENANT_ID", ""),
+        "client_id": os.environ.get("AZURE_CLIENT_ID", ""),
+        "client_secret": os.environ.get("AZURE_CLIENT_SECRET", ""),
+    }
+
+
 def _get_access_token() -> str:
+    cfg = _get_config()
     msal_app = ConfidentialClientApplication(
-        AZURE_CLIENT_ID,
-        authority=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}",
-        client_credential=AZURE_CLIENT_SECRET,
+        cfg["client_id"],
+        authority=f"https://login.microsoftonline.com/{cfg['tenant_id']}",
+        client_credential=cfg["client_secret"],
     )
     result = msal_app.acquire_token_for_client(scopes=SCOPES)
     if "access_token" not in result:
@@ -30,13 +35,14 @@ def _get_access_token() -> str:
 
 
 def _get_connection() -> pyodbc.Connection:
+    cfg = _get_config()
     token = _get_access_token()
     token_bytes = token.encode("UTF-16-LE")
     token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
     conn_str = (
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-        f"SERVER={FABRIC_SQL_SERVER};"
-        f"DATABASE={FABRIC_DATABASE};"
+        f"SERVER={cfg['server']};"
+        f"DATABASE={cfg['database']};"
         f"Encrypt=yes;TrustServerCertificate=no;"
     )
     return pyodbc.connect(conn_str, attrs_before={SQL_COPT_SS_ACCESS_TOKEN: token_struct})
@@ -44,8 +50,10 @@ def _get_connection() -> pyodbc.Connection:
 
 @app.get("/health")
 def health():
-    configured = all([FABRIC_SQL_SERVER, FABRIC_DATABASE, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET])
-    return {"status": "ok", "configured": configured}
+    cfg = _get_config()
+    configured = all(cfg.values())
+    env_keys = [k for k, v in cfg.items() if not v]
+    return {"status": "ok", "configured": configured, "missing": env_keys}
 
 
 @app.get("/api/tables")
