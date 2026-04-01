@@ -20,8 +20,8 @@ API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 _sessions: dict[str, dict] = {}
 
 
-def _get_users() -> dict[str, str]:
-    """Parse USERS env var: 'user1:pass1,user2:pass2' -> {user: pass}"""
+def _get_users() -> dict[str, dict]:
+    """Parse USERS env var: 'user1:pass1:role,user2:pass2:role' -> {user: {password, role}}"""
     raw = os.environ.get("USERS", "")
     if not raw:
         return {}
@@ -29,8 +29,11 @@ def _get_users() -> dict[str, str]:
     for pair in raw.split(","):
         pair = pair.strip()
         if ":" in pair:
-            u, p = pair.split(":", 1)
-            users[u.strip()] = p.strip()
+            parts = pair.split(":")
+            u = parts[0].strip()
+            p = parts[1].strip() if len(parts) > 1 else ""
+            role = parts[2].strip() if len(parts) > 2 else "admin"
+            users[u] = {"password": p, "role": role}
     return users
 
 
@@ -44,11 +47,12 @@ def login(req: LoginRequest):
     users = _get_users()
     if not users:
         raise HTTPException(status_code=500, detail="No users configured")
-    if req.username not in users or not secrets.compare_digest(users[req.username], req.password):
+    user_data = users.get(req.username)
+    if not user_data or not secrets.compare_digest(user_data["password"], req.password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = secrets.token_hex(32)
-    _sessions[token] = {"user": req.username, "expires": time.time() + 86400}  # 24h
-    return {"token": token, "user": req.username}
+    _sessions[token] = {"user": req.username, "role": user_data["role"], "expires": time.time() + 86400}
+    return {"token": token, "user": req.username, "role": user_data["role"]}
 
 
 def _verify_auth(request: Request, api_key: str = Security(API_KEY_HEADER)):

@@ -224,7 +224,7 @@ tbody tr.row-warn { background: #fffff0; }
             <h2 id="page-title">Overview</h2>
             <div class="topbar-actions">
                 <span class="refresh-time" id="refresh-time"></span>
-                <button class="btn btn-primary" onclick="refreshAll()">&#8635; Refresh</button>
+                <button class="btn btn-primary admin-only" onclick="refreshAll()">&#8635; Refresh</button>
                 <button class="btn btn-secondary" onclick="doLogout()">Sign Out</button>
             </div>
         </div>
@@ -236,7 +236,7 @@ tbody tr.row-warn { background: #fffff0; }
 
 <script>
 const B = window.location.origin;
-let TK = '', USR = '', DATA = {};
+let TK = '', USR = '', ROLE = '', DATA = {};
 
 // ── Auth ──
 async function doLogin() {
@@ -246,15 +246,23 @@ async function doLogin() {
     try {
         const r = await fetch(B+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
         if(!r.ok) throw 0;
-        const d = await r.json(); TK=d.token; USR=d.user;
-        sessionStorage.setItem('pt',TK); sessionStorage.setItem('pu',USR);
+        const d = await r.json(); TK=d.token; USR=d.user; ROLE=d.role||'viewer';
+        sessionStorage.setItem('pt',TK); sessionStorage.setItem('pu',USR); sessionStorage.setItem('pr',ROLE);
         enter();
     } catch(e){ document.getElementById('login-error').style.display='block'; }
 }
-function enter(){ document.getElementById('login-overlay').style.display='none'; document.getElementById('app').style.display='block'; document.getElementById('sidebar-user').textContent=USR; refreshAll(); }
-function doLogout(){ TK='';USR='';sessionStorage.clear(); document.getElementById('login-overlay').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('login-error').style.display='none'; }
+function enter(){
+    document.getElementById('login-overlay').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('sidebar-user').innerHTML=USR+' <span class="b '+(ROLE==='admin'?'b-green':'b-blue')+'" style="font-size:9px;margin-left:4px;">'+ROLE.toUpperCase()+'</span>';
+    // Hide admin-only elements for viewers
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display=ROLE==='admin'?'':'none');
+    refreshAll();
+}
+function doLogout(){ TK='';USR='';ROLE='';sessionStorage.clear(); document.getElementById('login-overlay').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('login-error').style.display='none'; }
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-(function(){ const t=sessionStorage.getItem('pt'),u=sessionStorage.getItem('pu'); if(t){TK=t;USR=u||'';enter();}})();
+(function(){ const t=sessionStorage.getItem('pt'),u=sessionStorage.getItem('pu'),r=sessionStorage.getItem('pr'); if(t){TK=t;USR=u||'';ROLE=r||'viewer';enter();}})();
+function isAdmin(){ return ROLE==='admin'; }
 
 async function F(p){ const r=await fetch(B+p,{headers:{Authorization:'Bearer '+TK}}); if(r.status===401){doLogout();throw 0;} return r.json(); }
 
