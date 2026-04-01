@@ -107,11 +107,12 @@ tbody tr.row-warn { background: #fffff0; }
 /* Tree */
 .tree { font-size: 13px; }
 .tree-parent { border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 4px; background: #fff; overflow: hidden; }
-.tree-parent-header { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; gap: 8px; font-weight: 600; font-size: 13px; transition: background 0.15s; }
+.tree-parent-header { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; gap: 6px; font-weight: 600; font-size: 13px; transition: background 0.15s; }
 .tree-parent-header:hover { background: #f7fafc; }
 .tree-parent-header .arrow { transition: transform 0.2s; font-size: 11px; color: #718096; }
 .tree-parent-header .arrow.open { transform: rotate(90deg); }
-.tree-parent-header .stats { margin-left: auto; display: flex; gap: 8px; font-size: 10px; font-weight: 400; color: #718096; align-items: center; }
+.tree-parent-header .pname { min-width: 0; white-space: nowrap; }
+.tree-parent-header .stats { display: flex; gap: 6px; font-size: 10px; font-weight: 400; color: #718096; align-items: center; margin-left: 8px; }
 .tree-children { display: none; border-top: 1px solid #f0f4f8; }
 .tree-children.open { display: block; }
 .tree-client { border-bottom: 1px solid #f0f4f8; }
@@ -119,7 +120,7 @@ tbody tr.row-warn { background: #fffff0; }
 .tree-client-header:hover { background: #f7fafc; }
 .tree-client-header .arrow { font-size: 10px; color: #a0aec0; transition: transform 0.2s; }
 .tree-client-header .arrow.open { transform: rotate(90deg); }
-.tree-client-header .stats { margin-left: auto; display: flex; gap: 8px; font-size: 10px; font-weight: 400; color: #a0aec0; align-items: center; }
+.tree-client-header .stats { display: flex; gap: 6px; font-size: 10px; font-weight: 400; color: #a0aec0; align-items: center; margin-left: 8px; }
 .tree-agreements { display: none; background: #fafcfe; }
 .tree-agreements.open { display: block; }
 .tree-agreement { padding: 5px 12px 5px 44px; border-bottom: 1px solid #f0f4f8; font-size: 11px; display: flex; align-items: center; gap: 8px; }
@@ -281,8 +282,10 @@ async function refreshAll(){
 
 // ── Navigation ──
 let currentView = 'overview';
-function go(v){
+let portfolioFilters = {}; // {status, cpi, bizLine, agrType, search}
+function go(v, filters){
     currentView=v;
+    if(v==='portfolio' && filters) portfolioFilters=filters; else if(v!=='portfolio') portfolioFilters={};
     document.querySelectorAll('.nav-item').forEach((n,i)=>{n.classList.toggle('active',n.getAttribute('onclick')===`go('${v}')`)});
     const titles={overview:'Overview',portfolio:'Portfolio Explorer',renewals:'Renewals & Expirations',escalators:'Fee Escalators',alerts:'Alerts & Actions',fees:'Fee Analysis',revenue:'Revenue Optimizer',documents:'Document Vault',quality:'Data Quality'};
     document.getElementById('page-title').textContent=titles[v]||v;
@@ -344,35 +347,37 @@ function rOverview(){
     // Status donut
     dc('c-status');
     const sL=Object.keys(statuses),sC=sL.map(s=>{const l=s.toLowerCase();if(l.includes('current'))return'#2b6b3e';if(l.includes('draft'))return'#d97706';if(l.includes('superseded'))return'#718096';if(l.includes('no agreement'))return'#c53030';return'#4299e1';});
-    CI['c-status']=new Chart(H('c-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:Object.values(statuses),backgroundColor:sC,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},padding:10}}}}});
+    CI['c-status']=new Chart(H('c-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:Object.values(statuses),backgroundColor:sC,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{status:sL[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},padding:10}}}}});
 
     // Biz bar
     dc('c-biz');
     const bCol=gc(DATA.biz,'business_line'),bFee=gc(DATA.biz,'total_contract_fees');
     const bL=biz.map(r=>{let n=r[bCol]||'?';return n.length>28?n.substring(0,26)+'...':n;}),bV=biz.map(r=>$(r[bFee]));
-    CI['c-biz']=new Chart(H('c-biz'),{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
+    const bLFull=biz.map(r=>r[bCol]||'?');
+    CI['c-biz']=new Chart(H('c-biz'),{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{bizLine:bLFull[el[0].index]});}},plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
 
     // Gov law
     dc('c-gov');
     const cG=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
     const gC=cnt(d,cG),gS=Object.entries(gC).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    CI['c-gov']=new Chart(H('c-gov'),{type:'bar',data:{labels:gS.map(e=>e[0]),datasets:[{data:gS.map(e=>e[1]),backgroundColor:'#38855a',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
+    CI['c-gov']=new Chart(H('c-gov'),{type:'bar',data:{labels:gS.map(e=>e[0]),datasets:[{data:gS.map(e=>e[1]),backgroundColor:'#38855a',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{govLaw:gS[el[0].index][0]});}},plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
 
     // CPI stacked
     dc('c-cpi');
     const bCpi=gc(DATA.biz,'cpi_clients'),bTot=gc(DATA.biz,'total_clients');
-    CI['c-cpi']=new Chart(H('c-cpi'),{type:'bar',data:{labels:bL,datasets:[{label:'CPI',data:biz.map(r=>$(r[bCpi])),backgroundColor:'#2b6b3e',borderRadius:4},{label:'No CPI',data:biz.map(r=>$(r[bTot])-$(r[bCpi])),backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{font:{family:'Inter',size:11}}}},scales:{x:{stacked:true},y:{stacked:true}}}});
+    CI['c-cpi']=new Chart(H('c-cpi'),{type:'bar',data:{labels:bL,datasets:[{label:'CPI',data:biz.map(r=>$(r[bCpi])),backgroundColor:'#2b6b3e',borderRadius:4},{label:'No CPI',data:biz.map(r=>$(r[bTot])-$(r[bCpi])),backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){const idx=el[0].index;const ds=el[0].datasetIndex;go('portfolio',{bizLine:bLFull[idx],cpi:ds===0?'yes':'no'});}},plugins:{legend:{labels:{font:{family:'Inter',size:11}}}},scales:{x:{stacked:true},y:{stacked:true}}}});
 
     // Agreement type
     dc('c-type');
     const cT=gc(DATA.master,'agreement_type'),tC=cnt(d,cT),tS=Object.entries(tC).sort((a,b)=>b[1]-a[1]).slice(0,8);
     const tColors=['#2b6b3e','#38855a','#4a9e6e','#d97706','#4299e1','#718096','#9f7aea','#ed8936'];
-    CI['c-type']=new Chart(H('c-type'),{type:'doughnut',data:{labels:tS.map(e=>e[0]),datasets:[{data:tS.map(e=>e[1]),backgroundColor:tColors,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+    CI['c-type']=new Chart(H('c-type'),{type:'doughnut',data:{labels:tS.map(e=>e[0]),datasets:[{data:tS.map(e=>e[1]),backgroundColor:tColors,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{agrType:tS[el[0].index][0]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
 
     // Dispute
     dc('c-dispute');
     const cD=gc(DATA.master,'dispute_type'),dC=cnt(d,cD);
-    CI['c-dispute']=new Chart(H('c-dispute'),{type:'doughnut',data:{labels:Object.keys(dC),datasets:[{data:Object.values(dC),backgroundColor:['#718096','#2b6b3e','#c53030','#4299e1'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+    const dLabels=Object.keys(dC);
+    CI['c-dispute']=new Chart(H('c-dispute'),{type:'doughnut',data:{labels:dLabels,datasets:[{data:Object.values(dC),backgroundColor:['#718096','#2b6b3e','#c53030','#4299e1'],borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{search:dLabels[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
 }
 
 // ══════════════════════════════════════════
@@ -384,78 +389,124 @@ function rPortfolio(){
     const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'), cT=gc(DATA.master,'agreement_type');
     const cFee=gc(DATA.master,'contract_fee_1'), cCpi=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
     const cExec=gc(DATA.master,'execution_date'), cSP=gc(DATA.master,'sharepoint_path')||gc(DATA.master,'new_file_path');
+    const cBiz=gc(DATA.master,'business_line_1'), cGov=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
+    const cDisp=gc(DATA.master,'dispute_type');
 
-    // Build tree: parent → clients → agreements
-    const tree={};
-    d.forEach(r=>{
-        const parent=r[cP]||r[cC]||'Unknown';
-        const client=r[cC]||'Unknown';
-        if(!tree[parent])tree[parent]={clients:{},count:0,totalFee:0};
-        if(!tree[parent].clients[client])tree[parent].clients[client]=[];
-        tree[parent].clients[client].push(r);
-        tree[parent].count++;
-        tree[parent].totalFee+=$(r[cFee]);
-    });
+    // Get unique values for filters
+    const allStatuses=[...new Set(d.map(r=>r[cS]).filter(Boolean))].sort();
+    const allTypes=[...new Set(d.map(r=>r[cT]).filter(v=>v&&v!=='None'))].sort();
+    const allBizLines=[...new Set(d.map(r=>r[cBiz]).filter(v=>v&&v!=='None'))].sort();
+    const allGovLaws=[...new Set(d.map(r=>r[cGov]).filter(v=>v&&v!=='None'))].sort();
 
-    const parentsSorted=Object.entries(tree).sort((a,b)=>a[0].localeCompare(b[0]));
+    // Pre-set filters from navigation
+    const pf=portfolioFilters||{};
 
     setContent(`
-        <div class="toolbar"><input type="text" id="tree-search" placeholder="Search parent companies, clients, or agreements..."></div>
+        <div class="toolbar">
+            <input type="text" id="tree-search" placeholder="Search..." value="${pf.search||''}" style="min-width:150px">
+            <select id="pf-status"><option value="">All Statuses</option>${allStatuses.map(s=>`<option ${pf.status===s?'selected':''}>${s}</option>`).join('')}</select>
+            <select id="pf-cpi"><option value="">All CPI</option><option value="yes" ${pf.cpi==='yes'?'selected':''}>CPI Only</option><option value="no" ${pf.cpi==='no'?'selected':''}>Non-CPI</option></select>
+            <select id="pf-type"><option value="">All Types</option>${allTypes.map(t=>`<option ${pf.agrType===t?'selected':''}>${t}</option>`).join('')}</select>
+            <select id="pf-biz"><option value="">All Business Lines</option>${allBizLines.map(b=>`<option ${pf.bizLine===b?'selected':''}>${b}</option>`).join('')}</select>
+            <select id="pf-gov"><option value="">All Governing Law</option>${allGovLaws.map(g=>`<option ${pf.govLaw===g?'selected':''}>${g}</option>`).join('')}</select>
+            <button class="btn btn-secondary" onclick="portfolioFilters={};rPortfolio();">Clear</button>
+        </div>
         <div class="card" style="padding:8px">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 12px 8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;">
-                <span style="font-size:12px;color:#718096;font-weight:600;">${parentsSorted.length} parent entities &middot; ${d.length} agreements</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 12px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:2px;">
+                <span style="font-size:12px;color:#718096;font-weight:600;" id="tree-count"></span>
                 <button class="btn btn-secondary" onclick="toggleAllTree()">Expand / Collapse All</button>
             </div>
-            <div id="tree-container" class="tree">${parentsSorted.map(([pName,pData],pi)=>{
-                const clientEntries=Object.entries(pData.clients).sort((a,b)=>a[0].localeCompare(b[0]));
-                const allAgrs=[].concat(...Object.values(pData.clients));
-                const cpiCount=allAgrs.filter(r=>r[cCpi]&&r[cCpi].toLowerCase().includes('yes')).length;
-                const currentCount=allAgrs.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
-                const bizLines=[...new Set(allAgrs.map(r=>r[gc(DATA.master,'business_line_1')]).filter(v=>v&&v!=='None'))];
-                return `<div class="tree-parent" data-search="${pName.toLowerCase()}">
-                    <div class="tree-parent-header" onclick="toggleParent(${pi})">
-                        <span class="arrow" id="pa-${pi}">&#9654;</span>
-                        <strong>${pName}</strong>
-                        <div class="stats">
-                            <span>${clientEntries.length} client${clientEntries.length>1?'s':''}</span>
-                            <span>${pData.count} agmt${pData.count>1?'s':''}</span>
-                            <span class="b b-green" style="font-size:9px">${currentCount} active</span>
-                            ${cpiCount?`<span class="b b-amber" style="font-size:9px">${cpiCount} CPI</span>`:''}
-                            <span>${fmt$(pData.totalFee)}</span>
-                            ${bizLines.length?`<span style="font-size:9px;color:#a0aec0">${bizLines.slice(0,2).join(', ')}</span>`:''}
-                        </div>
-                    </div>
-                    <div class="tree-children" id="pc-${pi}">${clientEntries.map(([cName,agrs],ci)=>{
-                        const cid=`${pi}-${ci}`;
-                        return `<div class="tree-client" data-search="${cName.toLowerCase()}">
-                            <div class="tree-client-header" onclick="toggleClient('${cid}')">
-                                <span class="arrow" id="ca-${cid}">&#9654;</span>
-                                <span>${cName}</span>
-                                <div class="stats">
-                                    <span>${agrs.length} agreement${agrs.length>1?'s':''}</span>
-                                    <span>${fmt$(sum(agrs,cFee))}</span>
-                                </div>
-                            </div>
-                            <div class="tree-agreements" id="cc-${cid}">${agrs.map(r=>`
-                                <div class="tree-agreement">
-                                    <span class="agr-name">${r[cN]||r[cT]||'Agreement'}</span>
-                                    <div class="agr-meta">
-                                        ${bStat(r[cS])}
-                                        <span>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</span>
-                                        <span>${fD(r[cExec])}</span>
-                                        <span>${r[cFee]&&r[cFee]!=='None'?fmt$(r[cFee]):'—'}</span>
-                                        ${r[cCpi]&&r[cCpi].toLowerCase().includes('yes')?'<span class="b b-green">CPI</span>':''}
-                                        ${r[cSP]&&r[cSP]!=='None'?`<a href="${r[cSP]}" target="_blank" class="sp-link">&#128196; Open</a>`:''}
-                                    </div>
-                                </div>
-                            `).join('')}</div>
-                        </div>`;
-                    }).join('')}</div>
-                </div>`;
-            }).join('')}</div>
+            <div id="tree-container" class="tree"></div>
         </div>
     `);
-    H('tree-search').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.tree-parent').forEach(p=>{p.style.display=p.getAttribute('data-search').includes(q)||q===''?'':'none';});};
+
+    function buildTree(){
+        const q=H('tree-search').value.toLowerCase();
+        const fStatus=H('pf-status').value, fCpi=H('pf-cpi').value, fType=H('pf-type').value, fBiz=H('pf-biz').value, fGov=H('pf-gov').value;
+
+        // Filter agreements first
+        const filtered=d.filter(r=>{
+            if(q){const hay=(r[cP]+''+r[cC]+''+r[cN]+''+r[cT]).toLowerCase();if(!hay.includes(q))return false;}
+            if(fStatus&&r[cS]!==fStatus)return false;
+            if(fCpi==='yes'&&!(r[cCpi]&&r[cCpi].toLowerCase().includes('yes')))return false;
+            if(fCpi==='no'&&r[cCpi]&&r[cCpi].toLowerCase().includes('yes'))return false;
+            if(fType&&r[cT]!==fType)return false;
+            if(fBiz&&r[cBiz]!==fBiz)return false;
+            if(fGov&&r[cGov]!==fGov)return false;
+            return true;
+        });
+
+        // Build tree from filtered data
+        const tree={};
+        filtered.forEach(r=>{
+            const parent=r[cP]||r[cC]||'Unknown';
+            const client=r[cC]||'Unknown';
+            if(!tree[parent])tree[parent]={clients:{},count:0,totalFee:0};
+            if(!tree[parent].clients[client])tree[parent].clients[client]=[];
+            tree[parent].clients[client].push(r);
+            tree[parent].count++;
+            tree[parent].totalFee+=$(r[cFee]);
+        });
+
+        const parentsSorted=Object.entries(tree).sort((a,b)=>a[0].localeCompare(b[0]));
+        const autoExpand=filtered.length<=30;
+        H('tree-count').textContent=parentsSorted.length+' parent entities \u00b7 '+filtered.length+' agreements'+(filtered.length<d.length?' (filtered from '+d.length+')':'');
+
+        H('tree-container').innerHTML=parentsSorted.map(([pName,pData],pi)=>{
+            const clientEntries=Object.entries(pData.clients).sort((a,b)=>a[0].localeCompare(b[0]));
+            const allAgrs=[].concat(...Object.values(pData.clients));
+            const cpiCnt=allAgrs.filter(r=>r[cCpi]&&r[cCpi].toLowerCase().includes('yes')).length;
+            const curCnt=allAgrs.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
+            const bizL=[...new Set(allAgrs.map(r=>r[cBiz]).filter(v=>v&&v!=='None'))];
+            return `<div class="tree-parent">
+                <div class="tree-parent-header" onclick="toggleParent(${pi})">
+                    <span class="arrow ${autoExpand?'open':''}" id="pa-${pi}">&#9654;</span>
+                    <span class="pname"><strong>${pName}</strong></span>
+                    <div class="stats">
+                        <span>${clientEntries.length} client${clientEntries.length>1?'s':''}</span>
+                        <span>${pData.count} agmt${pData.count>1?'s':''}</span>
+                        <span class="b b-green" style="font-size:9px">${curCnt} active</span>
+                        ${cpiCnt?`<span class="b b-amber" style="font-size:9px">${cpiCnt} CPI</span>`:''}
+                        <span>${fmt$(pData.totalFee)}</span>
+                        ${bizL.length?`<span style="font-size:9px;color:#a0aec0">${bizL.slice(0,2).join(', ')}</span>`:''}
+                    </div>
+                </div>
+                <div class="tree-children ${autoExpand?'open':''}" id="pc-${pi}">${clientEntries.map(([cName,agrs],ci)=>{
+                    const cid=pi+'-'+ci;
+                    return `<div class="tree-client">
+                        <div class="tree-client-header" onclick="toggleClient('${cid}')">
+                            <span class="arrow ${autoExpand?'open':''}" id="ca-${cid}">&#9654;</span>
+                            <span>${cName}</span>
+                            <div class="stats">
+                                <span>${agrs.length} agmt${agrs.length>1?'s':''}</span>
+                                <span>${fmt$(sum(agrs,cFee))}</span>
+                            </div>
+                        </div>
+                        <div class="tree-agreements ${autoExpand?'open':''}" id="cc-${cid}">${agrs.map(r=>`
+                            <div class="tree-agreement">
+                                <span class="agr-name">${r[cN]||r[cT]||'Agreement'}</span>
+                                <div class="agr-meta">
+                                    ${bStat(r[cS])}
+                                    <span>${r[cT]&&r[cT]!=='None'?r[cT]:'—'}</span>
+                                    <span>${fD(r[cExec])}</span>
+                                    <span>${r[cFee]&&r[cFee]!=='None'?fmt$(r[cFee]):'—'}</span>
+                                    ${r[cCpi]&&r[cCpi].toLowerCase().includes('yes')?'<span class="b b-green">CPI</span>':''}
+                                    ${r[cSP]&&r[cSP]!=='None'?`<a href="${r[cSP]}" target="_blank" class="sp-link">&#128196; Open</a>`:''}
+                                </div>
+                            </div>
+                        `).join('')}</div>
+                    </div>`;
+                }).join('')}</div>
+            </div>`;
+        }).join('');
+    }
+    buildTree();
+    H('tree-search').oninput=buildTree;
+    H('pf-status').onchange=buildTree;
+    H('pf-cpi').onchange=buildTree;
+    H('pf-type').onchange=buildTree;
+    H('pf-biz').onchange=buildTree;
+    H('pf-gov').onchange=buildTree;
 }
 function toggleParent(i){const c=H('pc-'+i),a=H('pa-'+i);c.classList.toggle('open');a.classList.toggle('open');}
 function toggleClient(id){const c=H('cc-'+id),a=H('ca-'+id);c.classList.toggle('open');a.classList.toggle('open');}
@@ -583,11 +634,12 @@ function rEscalators(){
 
     dc('c-esc-biz');
     const bS=Object.entries(bizBreak).sort((a,b)=>b[1]-a[1]);
-    CI['c-esc-biz']=new Chart(H('c-esc-biz'),{type:'bar',data:{labels:bS.map(e=>e[0].length>28?e[0].substring(0,26)+'...':e[0]),datasets:[{data:bS.map(e=>e[1]),backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter',size:10}}}}}});
+    const bSFull=bS.map(e=>e[0]);
+    CI['c-esc-biz']=new Chart(H('c-esc-biz'),{type:'bar',data:{labels:bS.map(e=>e[0].length>28?e[0].substring(0,26)+'...':e[0]),datasets:[{data:bS.map(e=>e[1]),backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{bizLine:bSFull[el[0].index],cpi:'yes'});}},plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter',size:10}}}}}});
 
     dc('c-esc-val');
     const nonCpiFee=sum(DATA.fees.data,gc(DATA.fees,'contract_fee_total'))-totalCpiFee;
-    CI['c-esc-val']=new Chart(H('c-esc-val'),{type:'doughnut',data:{labels:['CPI-Linked','Non-CPI'],datasets:[{data:[totalCpiFee,Math.max(0,nonCpiFee)],backgroundColor:['#2b6b3e','#e2e8f0'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:12}}}}}});
+    CI['c-esc-val']=new Chart(H('c-esc-val'),{type:'doughnut',data:{labels:['CPI-Linked','Non-CPI'],datasets:[{data:[totalCpiFee,Math.max(0,nonCpiFee)],backgroundColor:['#2b6b3e','#e2e8f0'],borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{cpi:el[0].index===0?'yes':'no'});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:12}}}}}});
 }
 
 // ══════════════════════════════════════════
@@ -641,7 +693,8 @@ function rAlerts(){
 
     dc('c-alert-dist');
     const aColors=sorted.map(([t])=>{const l=t.toLowerCase();if(l.includes('over-billing')||l.includes('no agreement'))return'#c53030';if(l.includes('draft')||l.includes('unknown'))return'#d97706';if(l.includes('review'))return'#4299e1';return'#718096';});
-    CI['c-alert-dist']=new Chart(H('c-alert-dist'),{type:'doughnut',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:aColors,borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:10},padding:8}}}}});
+    const alertLabels=sorted.map(e=>e[0]);
+    CI['c-alert-dist']=new Chart(H('c-alert-dist'),{type:'doughnut',data:{labels:alertLabels,datasets:[{data:sorted.map(e=>e[1]),backgroundColor:aColors,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){H('alert-filter').value=alertLabels[el[0].index];renderAlerts();}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:10},padding:8}}}}});
 }
 
 // ══════════════════════════════════════════
