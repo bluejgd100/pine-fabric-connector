@@ -311,73 +311,114 @@ function setContent(html){document.getElementById('content').innerHTML=html;}
 // ══════════════════════════════════════════
 // 1. OVERVIEW
 // ══════════════════════════════════════════
+let overviewBizFilter = '';
 function rOverview(){
-    const d=DATA.master.data, biz=DATA.biz.data;
+    const allData=DATA.master.data, biz=DATA.biz.data;
     const cS=gc(DATA.master,'status_clean')||gc(DATA.master,'status'), cFee=gc(DATA.fees,'contract_fee_total'), cQ=gc(DATA.quality,'quality_score');
-    const statuses=cnt(d,cS);
-    const current=d.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
-    const totalFee=sum(DATA.fees.data,cFee);
-    const avgQ=DATA.quality.data.length?(sum(DATA.quality.data,cQ)/DATA.quality.data.length).toFixed(1):'—';
     const cRen=gc(DATA.master,'next_renewal_date'), cTerm=gc(DATA.master,'term_expiration');
-    const soon=d.filter(r=>{const du=daysUntil(r[cRen])||daysUntil(r[cTerm]);return du!==null&&du>=0&&du<=90;}).length;
+    const cBizM=gc(DATA.master,'business_line_1');
+    const cCpiM=gc(DATA.master,'cpi_flag')||gc(DATA.master,'cpi_fee_escalation');
+    const cBizF=gc(DATA.fees,'business_line_1')||gc(DATA.fees,'client_legal_name');
+    const cClientM=gc(DATA.master,'client_legal_name'), cClientF=gc(DATA.fees,'client_legal_name');
 
-    setContent(`
-        <div class="g6">
-            <div class="card kpi clickable" onclick="go('portfolio',{})"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses &#8594;</div></div>
-            <div class="card kpi green clickable" onclick="go('portfolio',{status:'Current'})"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio &#8594;</div></div>
-            <div class="card kpi blue clickable" onclick="go('fees')"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">All agreements &#8594;</div></div>
-            <div class="card kpi amber clickable" onclick="go('portfolio',{cpi:'yes'})"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation &#8594;</div></div>
+    // Get all business lines for filter
+    const allBizLines=[...new Set(allData.map(r=>r[cBizM]).filter(v=>v&&v!=='None'))].sort();
+
+    // Build the shell with filter (only once, preserve filter state)
+    if(!H('ov-biz-filter')){
+        setContent(`
+            <div class="toolbar" style="margin-bottom:16px;">
+                <select id="ov-biz-filter" style="min-width:280px;font-weight:600;">
+                    <option value="">All Business Lines</option>
+                    ${allBizLines.map(b=>`<option value="${b}" ${overviewBizFilter===b?'selected':''}>${b}</option>`).join('')}
+                </select>
+                <span id="ov-filter-label" style="font-size:12px;color:#718096;"></span>
+            </div>
+            <div id="ov-kpis"></div>
+            <div class="g2" id="ov-row1"></div>
+            <div class="g2" id="ov-row2"></div>
+            <div class="g2" id="ov-row3"></div>
+        `);
+        H('ov-biz-filter').onchange=function(){overviewBizFilter=this.value;renderOverviewData();};
+    }
+
+    renderOverviewData();
+
+    function renderOverviewData(){
+        const fBiz=overviewBizFilter||H('ov-biz-filter').value;
+        // Filter master data by business line
+        const d=fBiz?allData.filter(r=>r[cBizM]===fBiz):allData;
+        // Filter fee data — match by client names in filtered set
+        const clientsInScope=new Set(d.map(r=>r[cClientM]));
+        const feeData=fBiz?DATA.fees.data.filter(r=>clientsInScope.has(r[cClientF])):DATA.fees.data;
+        const qualData=fBiz?DATA.quality.data.filter(r=>clientsInScope.has(r[gc(DATA.quality,'client_legal_name')])):DATA.quality.data;
+
+        const statuses=cnt(d,cS);
+        const current=d.filter(r=>(r[cS]||'').toLowerCase().includes('current')).length;
+        const totalFee=sum(feeData,cFee);
+        const avgQ=qualData.length?(sum(qualData,cQ)/qualData.length).toFixed(1):'—';
+        const cpiCount=d.filter(r=>r[cCpiM]&&r[cCpiM].toLowerCase().includes('yes')).length;
+        const soon=d.filter(r=>{const du=daysUntil(r[cRen])||daysUntil(r[cTerm]);return du!==null&&du>=0&&du<=90;}).length;
+
+        H('ov-filter-label').textContent=fBiz?d.length+' of '+allData.length+' agreements':'Showing all '+allData.length+' agreements';
+
+        // KPIs
+        H('ov-kpis').innerHTML=`<div class="g6" style="margin-bottom:20px;">
+            <div class="card kpi clickable" onclick="go('portfolio',{${fBiz?`bizLine:'${fBiz.replace(/'/g,"\\'")}'`:''}})" title="View in Portfolio"><div class="kpi-label">Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses &#8594;</div></div>
+            <div class="card kpi green clickable" onclick="go('portfolio',{status:'Current'${fBiz?`,bizLine:'${fBiz.replace(/'/g,"\\'")}'`:''}})" title="View Current in Portfolio"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${d.length?(current/d.length*100).toFixed(0):0}% &#8594;</div></div>
+            <div class="card kpi blue clickable" onclick="go('fees')"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">Total fees &#8594;</div></div>
+            <div class="card kpi amber clickable" onclick="go('portfolio',{cpi:'yes'${fBiz?`,bizLine:'${fBiz.replace(/'/g,"\\'")}'`:''}})" title="View CPI in Portfolio"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${cpiCount}</div><div class="kpi-sub">Escalation &#8594;</div></div>
             <div class="card kpi red clickable" onclick="go('renewals')"><div class="kpi-label">Renew in 90d</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Action needed &#8594;</div></div>
             <div class="card kpi clickable" onclick="go('quality')"><div class="kpi-label">Avg Quality</div><div class="kpi-val">${avgQ}</div><div class="kpi-sub">Out of 100 &#8594;</div></div>
-        </div>
-        <div class="g2">
+        </div>`;
+
+        // Row 1: Status + Biz Revenue
+        H('ov-row1').innerHTML=`
             <div class="card"><h3>Status Distribution</h3><canvas id="c-status" height="260"></canvas></div>
             <div class="card"><h3>Revenue by Business Line</h3><canvas id="c-biz" height="260"></canvas></div>
-        </div>
-        <div class="g2">
+        `;
+
+        dc('c-status');
+        const sL=Object.keys(statuses),sC=sL.map(s=>{const l=s.toLowerCase();if(l.includes('current'))return'#2b6b3e';if(l.includes('draft'))return'#d97706';if(l.includes('superseded'))return'#718096';if(l.includes('no agreement'))return'#c53030';return'#4299e1';});
+        CI['c-status']=new Chart(H('c-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:Object.values(statuses),backgroundColor:sC,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{status:sL[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},padding:10}}}}});
+
+        dc('c-biz');
+        const bCol=gc(DATA.biz,'business_line'),bFeeC=gc(DATA.biz,'total_contract_fees');
+        const bL=biz.map(r=>{let n=r[bCol]||'?';return n.length>28?n.substring(0,26)+'...':n;}),bV=biz.map(r=>$(r[bFeeC]));
+        const bLFull=biz.map(r=>r[bCol]||'?');
+        CI['c-biz']=new Chart(H('c-biz'),{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:bLFull.map(b=>b===fBiz?'#1a4a2a':'#2b6b3e'),borderRadius:4}]},options:{indexAxis:'y',responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{bizLine:bLFull[el[0].index]});}},plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
+
+        // Row 2: Gov + CPI
+        H('ov-row2').innerHTML=`
             <div class="card"><h3>Governing Law</h3><canvas id="c-gov" height="220"></canvas></div>
             <div class="card"><h3>CPI by Business Line</h3><canvas id="c-cpi" height="220"></canvas></div>
-        </div>
-        <div class="g2">
+        `;
+
+        dc('c-gov');
+        const cG=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
+        const gC=cnt(d,cG),gS=Object.entries(gC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        CI['c-gov']=new Chart(H('c-gov'),{type:'bar',data:{labels:gS.map(e=>e[0]),datasets:[{data:gS.map(e=>e[1]),backgroundColor:'#38855a',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{govLaw:gS[el[0].index][0]});}},plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
+
+        dc('c-cpi');
+        const bCpi=gc(DATA.biz,'cpi_clients'),bTot=gc(DATA.biz,'total_clients');
+        CI['c-cpi']=new Chart(H('c-cpi'),{type:'bar',data:{labels:bL,datasets:[{label:'CPI',data:biz.map(r=>$(r[bCpi])),backgroundColor:'#2b6b3e',borderRadius:4},{label:'No CPI',data:biz.map(r=>$(r[bTot])-$(r[bCpi])),backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){const idx=el[0].index;const ds=el[0].datasetIndex;go('portfolio',{bizLine:bLFull[idx],cpi:ds===0?'yes':'no'});}},plugins:{legend:{labels:{font:{family:'Inter',size:11}}}},scales:{x:{stacked:true},y:{stacked:true}}}});
+
+        // Row 3: Type + Dispute
+        H('ov-row3').innerHTML=`
             <div class="card"><h3>Agreement Type Breakdown</h3><canvas id="c-type" height="220"></canvas></div>
             <div class="card"><h3>Dispute Resolution</h3><canvas id="c-dispute" height="220"></canvas></div>
-        </div>
-    `);
+        `;
 
-    // Status donut
-    dc('c-status');
-    const sL=Object.keys(statuses),sC=sL.map(s=>{const l=s.toLowerCase();if(l.includes('current'))return'#2b6b3e';if(l.includes('draft'))return'#d97706';if(l.includes('superseded'))return'#718096';if(l.includes('no agreement'))return'#c53030';return'#4299e1';});
-    CI['c-status']=new Chart(H('c-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:Object.values(statuses),backgroundColor:sC,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{status:sL[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},padding:10}}}}});
+        dc('c-type');
+        const cT=gc(DATA.master,'agreement_type'),tC=cnt(d,cT),tS=Object.entries(tC).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        const tColors=['#2b6b3e','#38855a','#4a9e6e','#d97706','#4299e1','#718096','#9f7aea','#ed8936'];
+        CI['c-type']=new Chart(H('c-type'),{type:'doughnut',data:{labels:tS.map(e=>e[0]),datasets:[{data:tS.map(e=>e[1]),backgroundColor:tColors,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{agrType:tS[el[0].index][0]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
 
-    // Biz bar
-    dc('c-biz');
-    const bCol=gc(DATA.biz,'business_line'),bFee=gc(DATA.biz,'total_contract_fees');
-    const bL=biz.map(r=>{let n=r[bCol]||'?';return n.length>28?n.substring(0,26)+'...':n;}),bV=biz.map(r=>$(r[bFee]));
-    const bLFull=biz.map(r=>r[bCol]||'?');
-    CI['c-biz']=new Chart(H('c-biz'),{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:'#2b6b3e',borderRadius:4}]},options:{indexAxis:'y',responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{bizLine:bLFull[el[0].index]});}},plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v),font:{family:'Inter'}}},y:{ticks:{font:{family:'Inter',size:10}}}}}});
-
-    // Gov law
-    dc('c-gov');
-    const cG=gc(DATA.master,'governing_state')||gc(DATA.master,'governing_law');
-    const gC=cnt(d,cG),gS=Object.entries(gC).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    CI['c-gov']=new Chart(H('c-gov'),{type:'bar',data:{labels:gS.map(e=>e[0]),datasets:[{data:gS.map(e=>e[1]),backgroundColor:'#38855a',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{govLaw:gS[el[0].index][0]});}},plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Inter'}}}}}});
-
-    // CPI stacked
-    dc('c-cpi');
-    const bCpi=gc(DATA.biz,'cpi_clients'),bTot=gc(DATA.biz,'total_clients');
-    CI['c-cpi']=new Chart(H('c-cpi'),{type:'bar',data:{labels:bL,datasets:[{label:'CPI',data:biz.map(r=>$(r[bCpi])),backgroundColor:'#2b6b3e',borderRadius:4},{label:'No CPI',data:biz.map(r=>$(r[bTot])-$(r[bCpi])),backgroundColor:'#e2e8f0',borderRadius:4}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){const idx=el[0].index;const ds=el[0].datasetIndex;go('portfolio',{bizLine:bLFull[idx],cpi:ds===0?'yes':'no'});}},plugins:{legend:{labels:{font:{family:'Inter',size:11}}}},scales:{x:{stacked:true},y:{stacked:true}}}});
-
-    // Agreement type
-    dc('c-type');
-    const cT=gc(DATA.master,'agreement_type'),tC=cnt(d,cT),tS=Object.entries(tC).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    const tColors=['#2b6b3e','#38855a','#4a9e6e','#d97706','#4299e1','#718096','#9f7aea','#ed8936'];
-    CI['c-type']=new Chart(H('c-type'),{type:'doughnut',data:{labels:tS.map(e=>e[0]),datasets:[{data:tS.map(e=>e[1]),backgroundColor:tColors,borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{agrType:tS[el[0].index][0]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
-
-    // Dispute
-    dc('c-dispute');
-    const cD=gc(DATA.master,'dispute_type'),dC=cnt(d,cD);
-    const dLabels=Object.keys(dC);
-    CI['c-dispute']=new Chart(H('c-dispute'),{type:'doughnut',data:{labels:dLabels,datasets:[{data:Object.values(dC),backgroundColor:['#718096','#2b6b3e','#c53030','#4299e1'],borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{search:dLabels[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+        dc('c-dispute');
+        const cD=gc(DATA.master,'dispute_type'),dC=cnt(d,cD);
+        const dLabels=Object.keys(dC);
+        CI['c-dispute']=new Chart(H('c-dispute'),{type:'doughnut',data:{labels:dLabels,datasets:[{data:Object.values(dC),backgroundColor:['#718096','#2b6b3e','#c53030','#4299e1'],borderWidth:0}]},options:{responsive:true,onClick:(e,el)=>{if(el.length){go('portfolio',{search:dLabels[el[0].index]});}},plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11}}}}}});
+    }
 }
 
 // ══════════════════════════════════════════
