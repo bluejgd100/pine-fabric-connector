@@ -323,10 +323,10 @@ function rOverview(){
 
     setContent(`
         <div class="g6">
-            <div class="card kpi clickable" onclick="go('portfolio')"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses &#8594;</div></div>
-            <div class="card kpi green clickable" onclick="go('portfolio')"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio &#8594;</div></div>
+            <div class="card kpi clickable" onclick="go('portfolio',{})"><div class="kpi-label">Total Agreements</div><div class="kpi-val">${d.length}</div><div class="kpi-sub">${Object.keys(statuses).length} statuses &#8594;</div></div>
+            <div class="card kpi green clickable" onclick="go('portfolio',{status:'Current'})"><div class="kpi-label">Current / Active</div><div class="kpi-val">${current}</div><div class="kpi-sub">${(current/d.length*100).toFixed(0)}% of portfolio &#8594;</div></div>
             <div class="card kpi blue clickable" onclick="go('fees')"><div class="kpi-label">Contract Value</div><div class="kpi-val">${fmt$(totalFee)}</div><div class="kpi-sub">All agreements &#8594;</div></div>
-            <div class="card kpi amber clickable" onclick="go('escalators')"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation &#8594;</div></div>
+            <div class="card kpi amber clickable" onclick="go('portfolio',{cpi:'yes'})"><div class="kpi-label">CPI-Linked</div><div class="kpi-val">${DATA.cpi.count}</div><div class="kpi-sub">Fee escalation &#8594;</div></div>
             <div class="card kpi red clickable" onclick="go('renewals')"><div class="kpi-label">Renew in 90d</div><div class="kpi-val">${soon}</div><div class="kpi-sub">Action needed &#8594;</div></div>
             <div class="card kpi clickable" onclick="go('quality')"><div class="kpi-label">Avg Quality</div><div class="kpi-val">${avgQ}</div><div class="kpi-sub">Out of 100 &#8594;</div></div>
         </div>
