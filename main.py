@@ -4,7 +4,9 @@ import struct
 
 import pyodbc
 from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi.responses import FileResponse
 from fastapi.security import APIKeyHeader
+from fastapi.staticfiles import StaticFiles
 from msal import ConfidentialClientApplication
 
 app = FastAPI(title="Pine Fabric Connector")
@@ -56,6 +58,11 @@ def _get_connection() -> pyodbc.Connection:
         f"Encrypt=yes;TrustServerCertificate=no;"
     )
     return pyodbc.connect(conn_str, attrs_before={SQL_COPT_SS_ACCESS_TOKEN: token_struct})
+
+
+@app.get("/")
+def root():
+    return FileResponse("frontend/index.html")
 
 
 @app.get("/health")
