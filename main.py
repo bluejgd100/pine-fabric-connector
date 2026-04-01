@@ -1,23 +1,69 @@
 import os
 import secrets
 import struct
+import hashlib
+import time
 
 import pyodbc
-from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.responses import FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 from msal import ConfidentialClientApplication
+from pydantic import BaseModel
 
 app = FastAPI(title="Pine Fabric Connector")
 
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 
+# Session store: token -> {user, expires}
+_sessions: dict[str, dict] = {}
 
-def _verify_api_key(api_key: str = Security(API_KEY_HEADER)):
-    expected = os.environ.get("API_KEY", "")
-    if not expected or not api_key or not secrets.compare_digest(api_key, expected):
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+def _get_users() -> dict[str, str]:
+    """Parse USERS env var: 'user1:pass1,user2:pass2' -> {user: pass}"""
+    raw = os.environ.get("USERS", "")
+    if not raw:
+        return {}
+    users = {}
+    for pair in raw.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            u, p = pair.split(":", 1)
+            users[u.strip()] = p.strip()
+    return users
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/auth/login")
+def login(req: LoginRequest):
+    users = _get_users()
+    if not users:
+        raise HTTPException(status_code=500, detail="No users configured")
+    if req.username not in users or not secrets.compare_digest(users[req.username], req.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = secrets.token_hex(32)
+    _sessions[token] = {"user": req.username, "expires": time.time() + 86400}  # 24h
+    return {"token": token, "user": req.username}
+
+
+def _verify_auth(request: Request, api_key: str = Security(API_KEY_HEADER)):
+    # Check API key first (for programmatic access)
+    expected_key = os.environ.get("API_KEY", "")
+    if api_key and expected_key and secrets.compare_digest(api_key, expected_key):
+        return
+    # Check session token (for dashboard users)
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+        session = _sessions.get(token)
+        if session and session["expires"] > time.time():
+            return
+    raise HTTPException(status_code=401, detail="Invalid or missing credentials")
 
 SCOPES = ["https://database.windows.net/.default"]
 SQL_COPT_SS_ACCESS_TOKEN = 1256
@@ -73,7 +119,7 @@ def health():
     return {"status": "ok", "configured": configured, "missing": env_keys}
 
 
-@app.get("/api/tables", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/tables", dependencies=[Depends(_verify_auth)])
 def list_tables():
     try:
         conn = _get_connection()
@@ -102,36 +148,36 @@ def _query_table(table: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/contracts/master", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/master", dependencies=[Depends(_verify_auth)])
 def contracts_master():
     return _query_table("contracts_master")
 
 
-@app.get("/api/contracts/alerts", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/alerts", dependencies=[Depends(_verify_auth)])
 def contracts_alerts():
     return _query_table("contracts_alerts")
 
 
-@app.get("/api/contracts/cpi", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/cpi", dependencies=[Depends(_verify_auth)])
 def contracts_cpi():
     return _query_table("contracts_cpi")
 
 
-@app.get("/api/contracts/fee-analysis", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/fee-analysis", dependencies=[Depends(_verify_auth)])
 def contracts_fee_analysis():
     return _query_table("contracts_fee_analysis")
 
 
-@app.get("/api/contracts/client-summary", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/client-summary", dependencies=[Depends(_verify_auth)])
 def contracts_client_summary():
     return _query_table("contracts_client_summary")
 
 
-@app.get("/api/contracts/biz-line-summary", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/biz-line-summary", dependencies=[Depends(_verify_auth)])
 def contracts_biz_line_summary():
     return _query_table("contracts_biz_line_summary")
 
 
-@app.get("/api/contracts/data-quality", dependencies=[Depends(_verify_api_key)])
+@app.get("/api/contracts/data-quality", dependencies=[Depends(_verify_auth)])
 def contracts_data_quality():
     return _query_table("contracts_data_quality")

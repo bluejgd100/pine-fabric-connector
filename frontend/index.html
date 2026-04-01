@@ -174,10 +174,11 @@ tbody tr:hover { background: #f7fafc; }
     <div class="login-card">
         <div style="width:48px;height:48px;background:#2b6b3e;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#fff;font-weight:700;font-size:20px;">P</div>
         <h1>PINE Agreement Dashboard</h1>
-        <p>Enter your API key to access the dashboard</p>
-        <input type="password" id="api-key-input" placeholder="API Key" autofocus>
+        <p>Sign in with your credentials</p>
+        <input type="text" id="login-username" placeholder="Username" autofocus>
+        <input type="password" id="login-password" placeholder="Password">
         <button onclick="doLogin()">Sign In</button>
-        <div class="login-error" id="login-error">Invalid API key. Please try again.</div>
+        <div class="login-error" id="login-error">Invalid username or password.</div>
     </div>
 </div>
 
@@ -191,6 +192,8 @@ tbody tr:hover { background: #f7fafc; }
         <div class="header-right">
             <span class="refresh-time" id="refresh-time"></span>
             <button onclick="refreshAll()">Refresh Data</button>
+            <span style="font-size:13px;color:#4a5568;" id="user-display"></span>
+            <button onclick="doLogout()" style="background:#718096;">Sign Out</button>
         </div>
     </div>
 
@@ -334,37 +337,67 @@ tbody tr:hover { background: #f7fafc; }
 
 <script>
 const BASE = window.location.origin;
-let API_KEY = '';
+let AUTH_TOKEN = '';
+let CURRENT_USER = '';
 let DATA = {};
 let sortState = {};
 
 // Login
 async function doLogin() {
-    API_KEY = document.getElementById('api-key-input').value.trim();
-    if (!API_KEY) return;
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    if (!username || !password) return;
     try {
-        const res = await apiFetch('/api/tables');
-        if (res.tables) {
-            sessionStorage.setItem('pine_api_key', API_KEY);
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            refreshAll();
-        }
+        const res = await fetch(BASE + '/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        if (!res.ok) throw new Error('Unauthorized');
+        const data = await res.json();
+        AUTH_TOKEN = data.token;
+        CURRENT_USER = data.user;
+        sessionStorage.setItem('pine_token', AUTH_TOKEN);
+        sessionStorage.setItem('pine_user', CURRENT_USER);
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('user-display').textContent = CURRENT_USER;
+        refreshAll();
     } catch (e) {
         document.getElementById('login-error').style.display = 'block';
     }
 }
-document.getElementById('api-key-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-// Check saved key
+// Check saved session
 (function() {
-    const saved = sessionStorage.getItem('pine_api_key');
-    if (saved) { API_KEY = saved; doLogin(); }
+    const saved = sessionStorage.getItem('pine_token');
+    const user = sessionStorage.getItem('pine_user');
+    if (saved) {
+        AUTH_TOKEN = saved;
+        CURRENT_USER = user || '';
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('user-display').textContent = CURRENT_USER;
+        refreshAll();
+    }
 })();
 
+function doLogout() {
+    AUTH_TOKEN = '';
+    CURRENT_USER = '';
+    sessionStorage.removeItem('pine_token');
+    sessionStorage.removeItem('pine_user');
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+}
+
 async function apiFetch(path) {
-    const res = await fetch(BASE + path, { headers: { 'X-API-Key': API_KEY } });
-    if (res.status === 401) throw new Error('Unauthorized');
+    const res = await fetch(BASE + path, { headers: { 'Authorization': 'Bearer ' + AUTH_TOKEN } });
+    if (res.status === 401) { doLogout(); throw new Error('Unauthorized'); }
     return res.json();
 }
 
