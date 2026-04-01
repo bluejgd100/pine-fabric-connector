@@ -72,15 +72,49 @@ def list_tables():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/contracts/master")
-def contracts_master():
+def _query_table(table: str):
     try:
         conn = _get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM dbo.contracts_master")
+        cursor.execute(f"SELECT * FROM dbo.{table}")
         columns = [col[0] for col in cursor.description]
         rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
         conn.close()
         return {"count": len(rows), "columns": columns, "data": rows}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/contracts/master")
+def contracts_master():
+    return _query_table("contracts_master")
+
+
+@app.get("/api/contracts/alerts")
+def contracts_alerts():
+    return _query_table("contracts_alerts")
+
+
+@app.get("/api/contracts/cpi")
+def contracts_cpi():
+    return _query_table("contracts_cpi")
+
+
+@app.get("/api/contracts/fee-analysis")
+def contracts_fee_analysis():
+    return _query_table("contracts_fee_analysis")
+
+
+@app.get("/api/contracts/client-summary")
+def contracts_client_summary():
+    return _query_table("contracts_client_summary")
+
+
+@app.get("/api/contracts/biz-line-summary")
+def contracts_biz_line_summary():
+    return _query_table("contracts_biz_line_summary")
+
+
+@app.get("/api/contracts/data-quality")
+def contracts_data_quality():
+    return _query_table("contracts_data_quality")
